@@ -1,0 +1,319 @@
+import java_cup.runtime.Symbol;
+import java.util.*;
+import syntaxtree.*;
+
+parser code {:
+    public void syntax_error( Symbol cur_token ) {
+        String msg  = "Syntax Error at line: " + (cur_token.left+1); 
+        msg         += " col: " + (cur_token.right+1) + ".";
+        msg         += "\n Symbol: " + cur_token.toString();
+        report_error( msg, null );
+    }
+    public void unrecovered_syntax_error( Symbol cur_token ) throws java.lang.Exception {
+        super.unrecovered_syntax_error( cur_token );
+    }
+:}
+
+terminal PUBLIC;
+terminal CLASS;
+terminal STATIC;
+terminal MAIN;
+terminal STRING;
+terminal EXTENDS;
+terminal RETURN;
+terminal TRUE;
+terminal FALSE;
+terminal INT;
+terminal BOOLEAN;
+terminal THIS;
+terminal IF;
+terminal ELSE;
+terminal WHILE;
+terminal PRINTLN;
+terminal SEMICOLON;
+terminal COMMA;
+terminal EQUALS;
+terminal LPAREN;
+terminal RPAREN;
+terminal LBRACKET;
+terminal RBRACKET;
+terminal LBRACE;
+terminal RBRACE;
+terminal BANG;
+terminal VOID;
+terminal DOT;
+terminal LENGTH;
+terminal NEW;
+terminal AND;
+terminal TIMES;
+terminal PLUS;
+terminal MINUS;
+terminal LESSTHAN;
+terminal Integer INTLITERAL;
+terminal String IDENTIFIER;
+//----
+/*------------------------------
+            Non Terminals
+------------------------------*/
+
+non terminal Program program;
+non terminal MainClass main_class;
+non terminal ClassDeclList class_decl_list;
+non terminal ClassDecl class_decl;
+
+non terminal VarDecl var_decl;
+non terminal VarDeclList var_decl_list;
+
+non terminal MethodDecl method_decl;
+non terminal MethodDeclList method_decl_list;
+
+non terminal FormalList formal_list;
+non terminal FormalList formal_rest;
+
+non terminal Type type;
+non terminal IdentifierType type_ident;
+non terminal IntArrayType type_int_array;
+non terminal IntegerType type_int;
+non terminal BooleanType type_bool;
+
+non terminal Statement statement;
+non terminal Assign stmt_assign;
+non terminal ArrayAssign stmt_array_assign;
+non terminal If stmt_if;
+non terminal While stmt_while;
+non terminal Print stmt_print;
+non terminal Block stmt_block;
+non terminal StatementList statement_list;
+
+non terminal Exp exp;
+non terminal Exp exp_lt;
+non terminal Exp exp_plusminus;
+non terminal Exp exp_times;
+non terminal Exp exp_new;
+non terminal Exp exp_highest;
+non terminal Exp exp_simple;
+non terminal ExpList exp_list;
+non terminal ExpList exp_rest;
+
+non terminal Identifier ident;
+
+precedence left IDENTIFIER;
+
+start with program;
+
+program         ::= main_class:m class_decl_list:cl
+                    {:  RESULT = new Program( m, cl ); :}
+                ;
+main_class      ::= CLASS ident:ci LBRACE
+                    PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ident:si RPAREN
+                    LBRACE statement:s RBRACE RBRACKET
+                    {: RESULT = new MainClass( ci, si, s ); :}
+                ;
+class_decl      ::= CLASS ident:ci LBRACE var_decl_list:vdl method_decl_list:mdl RBRACE
+                    {: RESULT = new ClassDeclSimple( ci, vdl, mdl ); :}
+                |
+                CLASS ident:ci EXTENDS ident:ei LBRACE
+                var_decl_list:vdl method_decl_list:mdl RBRACE
+                    {: RESULT = new ClassDeclExtends( ci, ei, vdl, mdl ); :}
+                ;
+class_decl_list ::= class_decl_list:cdl class_decl:cd
+                    {: cdl.addElement(cd); RESULT = cdl; :}
+                |
+                    {: RESULT = new ClassDeclList(); :}
+                ;
+var_decl        ::= type:t ident:i SEMICOLON
+                    {: RESULT = new VarDecl( t, i ); :}
+                ;
+var_decl_list   ::= var_decl_list:vdl var_decl:vd
+                    {: vdl.addElement(vd); RESULT = vdl; :}
+                |
+                    {: RESULT = new VarDeclList(); :}
+                ;
+method_decl     ::= PUBLIC type:t ident:i LPAREN formal_list:fl RPAREN
+                    LBRACE var_decl_list:vdl statement_list:sl RETURN exp:e SEMICOLON RBRACE
+                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e ); :}
+                ;
+method_decl_list ::= method_decl_list:mdl method_decl:md
+                    {: mdl.addElement(md); RESULT = mdl; :}
+                |
+                    {: RESULT = new MethodDeclList(); :}
+                ;
+formal_list     ::= type:t ident:id formal_rest:fl
+                    {:
+                        FormalList newfl = new FormalList();
+                        newfl.addElement( new Formal( t, id ) );
+                        for( int i = 0; i < fl.size(); i++) {
+                            newfl.addElement( fl.elementAt(i) );
+                        }
+                        RESULT = newfl;
+                    :}
+                ;
+formal_rest     ::= formal_rest:fl COMMA type:t ident:id
+                    {: fl.addElement( new Formal( t, id ) ); RESULT = fl; :}
+                |
+                    {: RESULT = new FormalList(); :}
+                ;
+type            ::= type_bool:t
+                    {: RESULT = t; :}
+                |
+                type_ident:t
+                    {: RESULT = t; :}
+                |
+                type_int:t
+                    {: RESULT = t; :}
+                |
+                type_int_array:t
+                    {: RESULT = t; :}
+                ;
+type_bool       ::= BOOLEAN
+                    {: RESULT = new BooleanType(); :}
+                ;
+type_ident      ::= ident:id
+                    {: RESULT = new IdentifierType( id.toString() ); :}
+                ;
+type_int        ::= INT
+                    {: RESULT = new IntegerType(); :}
+                ;
+type_int_array  ::= INT LBRACKET RBRACKET
+                    {: RESULT = new IntArrayType(); :}
+                ;
+statement       ::= stmt_block:s
+                    {: RESULT = s; :}
+                |
+                stmt_if:s
+                    {: RESULT = s; :}
+                |
+                stmt_while:s
+                    {: RESULT = s; :}
+                |
+                stmt_print:s
+                    {: RESULT = s; :}
+                |
+                stmt_assign:s
+                    {: RESULT = s; :}
+                |
+                stmt_array_assign:s
+                    {: RESULT = s; :}
+                ;
+stmt_block      ::= LBRACE statement_list:sl RBRACE
+                    {: RESULT = new Block( sl ); :}
+                ;
+stmt_if         ::= IF LPAREN exp:e RPAREN statement:si ELSE statement:se
+                    {: RESULT = new If( e, si, se ); :}
+                ;
+stmt_while      ::= WHILE LPAREN exp:e RPAREN statement:s
+                    {: RESULT = new While( e, s ); :}
+                ;
+stmt_print      ::= PRINTLN LPAREN exp:e RPAREN SEMICOLON
+                    {: RESULT = new Print( e ); :}
+                ;
+stmt_assign     ::= ident:id EQUALS exp:e SEMICOLON
+                    {: RESULT = new Assign( id, e ); :}
+                ;
+stmt_array_assign ::= ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e
+                    {: RESULT = new ArrayAssign( id, ai, e ); :}
+                ;
+statement_list  ::= statement_list:sl statement:s
+                    {: sl.addElement( s ); RESULT = sl; :}
+                |
+                    {: RESULT = new StatementList(); :}
+                ;
+
+exp             ::= exp_lt:l AND exp:r
+                    {: RESULT = new And( l, r ); :}
+                |
+                exp_lt:e
+                    {: RESULT = e; :}
+                ;
+
+exp_lt          ::= exp_plusminus:l LESSTHAN exp_lt:r
+                    {: RESULT = new LessThan( l, r ); :}
+                |
+                exp_plusminus:e
+                    {: RESULT = e; :}
+                ;
+
+exp_plusminus   ::= exp_times:l PLUS exp_plusminus:r
+                    {: RESULT = new Plus( l, r ); :}
+                |
+                exp_times:l MINUS exp_plusminus:r
+                    {: RESULT = new Minus( l, r ); :}
+                |
+                exp_times:e
+                    {: RESULT = e; :}
+                ;
+
+exp_times       ::= exp_new:l TIMES exp_times:r
+                    {: RESULT = new Times( l, r ); :}
+                |
+                exp_new:e
+                    {: RESULT = e; :}
+                ;
+exp_new         ::= NEW INT LBRACKET exp_new:size RBRACKET
+                    {: RESULT = new NewArray( size ); :}
+                |
+                NEW ident:c LPAREN RPAREN
+                    {: RESULT = new NewObject( c ); :}
+                |
+                BANG exp_new:e
+                    {: RESULT = new Not( e ); :}
+                |
+                exp_highest:e
+                    {: RESULT = e; :}
+                ;
+exp_highest     ::= exp_highest:array DOT LENGTH
+                    {: RESULT = new ArrayLength( array ); :}
+                |
+                exp_highest:array LBRACKET exp_highest:index RBRACKET
+                    {: RESULT = new ArrayLookup( array, index ); :}
+                |
+                exp_highest:object DOT ident:method LPAREN exp_list:args RPAREN
+                    {: RESULT = new Call( object, method, args ); :}
+                |
+                exp_simple:e
+                    {: RESULT = e; :}
+                ;
+exp_simple      ::=
+                INTLITERAL:i
+                    {: RESULT = new IntegerLiteral( i.intValue() ); :}
+                |
+                TRUE
+                    {: RESULT = new True(); :}
+                |
+                FALSE
+                    {: RESULT = new False(); :}
+                |
+                ident:id
+                    {: RESULT = new IdentifierExp( id.toString() ); :}
+                |
+                THIS
+                    {: RESULT = new This(); :}
+                |
+                LPAREN exp:e RPAREN
+                    {: RESULT = e; :}
+                ;
+
+
+exp_list        ::= exp:e exp_rest:er
+                    {:
+                        ExpList newel = new ExpList();
+                        newel.addElement( e );
+                        for( int i = 0; i < er.size(); i++) {
+                            newel.addElement( er.elementAt(i) );
+                        }
+
+                        RESULT = newel;
+                    :}
+                |
+                    {:
+                        RESULT = new ExpList();
+                    :}
+                ;
+exp_rest        ::= exp_rest:er COMMA exp:e
+                    {: er.addElement(e); RESULT = er; :}
+                |
+                    {: RESULT = new ExpList(); :}
+                ;
+ident           ::= IDENTIFIER:s
+                {: RESULT = new Identifier(s); :}
+                ;
