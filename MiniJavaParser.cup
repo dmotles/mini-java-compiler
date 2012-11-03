@@ -5,8 +5,9 @@ import syntaxtree.*;
 parser code {:
     public void syntax_error( Symbol cur_token ) {
         String msg  = "Syntax Error at line: " + (cur_token.left+1); 
-        msg         += " col: " + (cur_token.right+1) + ".";
-        msg         += "\nSymbol: " + cur_token.toString();
+        msg         += " col: " + (cur_token.right+1) ;
+        msg         += " Symbol: " + cur_token.toString();
+        msg         += " Parser State: " + cur_token.parse_state;
         report_error( msg, null );
     }
     public void unrecovered_syntax_error( Symbol cur_token ) throws java.lang.Exception {
@@ -94,11 +95,11 @@ non terminal ExpList exp_rest;
 
 non terminal Identifier ident;
 
-precedence left AND;
-precedence left LESSTHAN;
-precedence left PLUS, MINUS;
-precedence left TIMES;
-precedence left LBRACKET;
+precedence right AND;
+precedence right LESSTHAN;
+precedence right PLUS, MINUS;
+precedence right TIMES;
+precedence right LBRACKET;
 
 start with program;
 
@@ -133,6 +134,9 @@ var_decl_list   ::= var_decl_list:vdl var_decl:vd
 method_decl     ::= PUBLIC type_id_pair:ti LPAREN formal_list:fl RPAREN
                     LBRACE var_decl_list:vdl statement_list:sl RETURN exp:e SEMICOLON RBRACE
                     {: RESULT = new MethodDecl( ti.type, ti.id, fl, vdl, sl, e ); :}
+                | PUBLIC type_id_pair:ti LPAREN formal_list:fl RPAREN
+                    LBRACE var_decl_list:vdl RETURN exp:e SEMICOLON RBRACE
+                    {: RESULT = new MethodDecl( ti.type, ti.id, fl, vdl, new StatementList(), e ); :}
                 ;
 method_decl_list ::= method_decl_list:mdl method_decl:md
                     {: mdl.addElement(md); RESULT = mdl; :}
@@ -148,6 +152,8 @@ formal_list     ::= type_id_pair:ti formal_rest:fl
                         }
                         RESULT = newfl;
                     :}
+                |
+                    {: RESULT = new FormalList(); :}
                 ;
 formal_rest     ::= formal_rest:fl COMMA type_id_pair:ti
                     {: fl.addElement( new Formal( ti.type, ti.id ) ); RESULT = fl; :}
@@ -186,6 +192,8 @@ statement       ::= stmt_block:s
                 ;
 stmt_block      ::= LBRACE statement_list:sl RBRACE
                     {: RESULT = new Block( sl ); :}
+                | LBRACE RBRACE
+                    {: RESULT = new Block( new StatementList() ); :}
                 ;
 stmt_if         ::= IF LPAREN exp:e RPAREN statement:si ELSE statement:se
                     {: RESULT = new If( e, si, se ); :}
@@ -199,14 +207,17 @@ stmt_print      ::= PRINTLN LPAREN exp:e RPAREN SEMICOLON
 stmt_assign     ::= ident:id EQUALS exp:e SEMICOLON
                     {: RESULT = new Assign( id, e ); :}
                 ;
-stmt_array_assign ::= ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e
+stmt_array_assign ::= ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e SEMICOLON
                     {: RESULT = new ArrayAssign( id, ai, e ); :}
                 ;
 
 statement_list  ::= statement_list:sl statement:s
                     {: sl.addElement( s ); RESULT = sl; :}
-                |
-                    {: RESULT = new StatementList(); :}
+                | statement:s
+                    {: StatementList stl = new StatementList();
+                        stl.addElement( s );
+                        RESULT = stl;
+                    :}
                 ;
 
 exp             ::= exp_and:e
