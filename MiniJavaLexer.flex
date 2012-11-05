@@ -1,6 +1,7 @@
-/* CS1622 Project 3
-   Daniel Motles <dmm141@pitt.edu>
-*/
+/**
+ * CS1622 Project 3
+ * Daniel Motles <dmm141@pitt.edu>
+ */
 import java_cup.runtime.Symbol;
 %%
 

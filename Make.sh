@@ -1,4 +1,6 @@
 #!/bin/sh
+# CS1622 Project 3
+# Daniel Motles <dmm141@pitt.edu>
 
 JAVACUP=java-cup-11a.jar
 JFLAGS="-g -classpath .:$JAVACUP"
