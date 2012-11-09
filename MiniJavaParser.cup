@@ -75,19 +75,10 @@ non terminal MethodDeclList method_decl_list;
 non terminal FormalList formal_list;
 non terminal FormalList formal_rest;
 
-non terminal TypeIdentStruct type_id_pair;
-
 non terminal Statement statement;
-non terminal Assign stmt_assign;
-non terminal ArrayAssign stmt_array_assign;
-non terminal If stmt_if;
-non terminal While stmt_while;
-non terminal Print stmt_print;
-non terminal Block stmt_block;
 non terminal StatementList statement_list;
 
 non terminal Exp exp;
-non terminal Exp exp_and;
 non terminal Exp exp_lt;
 non terminal Exp exp_plusminus;
 non terminal Exp exp_times;
@@ -96,14 +87,15 @@ non terminal Exp exp_first;
 non terminal Exp exp_T;
 non terminal ExpList exp_list;
 non terminal ExpList exp_rest;
+non terminal Type type;
 
 non terminal Identifier ident;
 
-precedence right AND;
-precedence right LESSTHAN;
-precedence right PLUS, MINUS;
-precedence right TIMES;
-precedence right LBRACKET;
+precedence left AND;
+precedence left LESSTHAN;
+precedence left PLUS, MINUS;
+precedence left TIMES;
+precedence left LBRACKET;
 
 start with program;
 
@@ -127,30 +119,30 @@ class_decl_list ::= class_decl_list:cdl class_decl:cd
                 |
                     {: RESULT = new ClassDeclList(); :}
                 ;
-var_decl        ::= type_id_pair:ti SEMICOLON
-                    {: RESULT = new VarDecl( ti.type, ti.id ); :}
+var_decl        ::= type:t ident:i SEMICOLON
+                    {: RESULT = new VarDecl( t, i ); :}
                 ;
 var_decl_list   ::= var_decl_list:vdl var_decl:vd
-                    {: vdl.addElement(vd); RESULT = vdl; :}
+                    {:
+                        vdl.addElement( vd );
+                        RESULT = vdl; 
+                    :}
                 |
                     {: RESULT = new VarDeclList(); :}
                 ;
-method_decl     ::= PUBLIC type_id_pair:ti LPAREN formal_list:fl RPAREN
+method_decl     ::= PUBLIC type:t ident:i LPAREN formal_list:fl RPAREN
                     LBRACE var_decl_list:vdl statement_list:sl RETURN exp:e SEMICOLON RBRACE
-                    {: RESULT = new MethodDecl( ti.type, ti.id, fl, vdl, sl, e ); :}
-                | PUBLIC type_id_pair:ti LPAREN formal_list:fl RPAREN
-                    LBRACE var_decl_list:vdl RETURN exp:e SEMICOLON RBRACE
-                    {: RESULT = new MethodDecl( ti.type, ti.id, fl, vdl, new StatementList(), e ); :}
+                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e ); :}
                 ;
 method_decl_list ::= method_decl_list:mdl method_decl:md
                     {: mdl.addElement(md); RESULT = mdl; :}
                 |
                     {: RESULT = new MethodDeclList(); :}
                 ;
-formal_list     ::= type_id_pair:ti formal_rest:fl
+formal_list     ::= type:t ident:id formal_rest:fl
                     {:
                         FormalList newfl = new FormalList();
-                        newfl.addElement( new Formal( ti.type, ti.id ) );
+                        newfl.addElement( new Formal( t, id ) );
                         for( int i = 0; i < fl.size(); i++) {
                             newfl.addElement( fl.elementAt(i) );
                         }
@@ -159,76 +151,53 @@ formal_list     ::= type_id_pair:ti formal_rest:fl
                 |
                     {: RESULT = new FormalList(); :}
                 ;
-formal_rest     ::= formal_rest:fl COMMA type_id_pair:ti
-                    {: fl.addElement( new Formal( ti.type, ti.id ) ); RESULT = fl; :}
+formal_rest     ::= formal_rest:fl COMMA type:t ident:i
+                    {: fl.addElement( new Formal( t, i ) ); RESULT = fl; :}
                 |
                     {: RESULT = new FormalList(); :}
                 ;
-type_id_pair    ::= BOOLEAN ident:id
-                    {: RESULT = new TypeIdentStruct( new BooleanType(), id ); :}
-                |
-                    IDENTIFIER:type ident:id
-                    {: RESULT = new TypeIdentStruct( new IdentifierType(type), id ); :}
-                |
-                    INT ident:id
-                    {: RESULT = new TypeIdentStruct( new IntegerType(), id ); :}
-                |
-                    INT LBRACKET RBRACKET ident:id
-                    {: RESULT = new TypeIdentStruct( new IntArrayType(), id ); :}
+
+type            ::= BOOLEAN
+                    {: RESULT = new BooleanType(); :}
+                | IDENTIFIER:type
+                    {: RESULT = new IdentifierType( type ); :}
+                | INT
+                    {: RESULT = new IntegerType(); :}
+                | INT LBRACKET RBRACKET
+                    {: RESULT = new IntArrayType(); :}
                 ;
-statement       ::= stmt_block:s
-                    {: RESULT = s; :}
-                |
-                stmt_if:s
-                    {: RESULT = s; :}
-                |
-                stmt_while:s
-                    {: RESULT = s; :}
-                |
-                stmt_print:s
-                    {: RESULT = s; :}
-                |
-                stmt_assign:s
-                    {: RESULT = s; :}
-                |
-                stmt_array_assign:s
-                    {: RESULT = s; :}
-                ;
-stmt_block      ::= LBRACE statement_list:sl RBRACE
+statement      ::= LBRACE statement_list:sl RBRACE
                     {: RESULT = new Block( sl ); :}
-                | LBRACE RBRACE
-                    {: RESULT = new Block( new StatementList() ); :}
-                ;
-stmt_if         ::= IF LPAREN exp:e RPAREN statement:si ELSE statement:se
+                | IF LPAREN exp:e RPAREN statement:si ELSE statement:se
                     {: RESULT = new If( e, si, se ); :}
-                ;
-stmt_while      ::= WHILE LPAREN exp:e RPAREN statement:s
+                | WHILE LPAREN exp:e RPAREN statement:s
                     {: RESULT = new While( e, s ); :}
-                ;
-stmt_print      ::= PRINTLN LPAREN exp:e RPAREN SEMICOLON
+                | PRINTLN LPAREN exp:e RPAREN SEMICOLON
                     {: RESULT = new Print( e ); :}
-                ;
-stmt_assign     ::= ident:id EQUALS exp:e SEMICOLON
+                | ident:id EQUALS exp:e SEMICOLON
                     {: RESULT = new Assign( id, e ); :}
-                ;
-stmt_array_assign ::= ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e SEMICOLON
+                | ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e SEMICOLON
                     {: RESULT = new ArrayAssign( id, ai, e ); :}
                 ;
 
-statement_list  ::= statement_list:sl statement:s
-                    {: sl.addElement( s ); RESULT = sl; :}
-                | statement:s
-                    {: StatementList stl = new StatementList();
-                        stl.addElement( s );
-                        RESULT = stl;
+statement_list  ::= statement:s statement_list:sl
+                    {:  
+                        if( sl.size() > 0 ) {
+                            StatementList oldsl = sl;
+                            sl = new StatementList();
+                            sl.addElement( s );
+                            for( int i=0; i < oldsl.size(); i++)
+                                sl.addElement( oldsl.elementAt(i) );
+                        } else {
+                            sl.addElement( s );
+                        }
+                        RESULT = sl;
                     :}
+                |
+                    {: RESULT = new StatementList(); :}
                 ;
 
-exp             ::= exp_and:e
-                    {: RESULT = e; :}
-                ;
-
-exp_and         ::= exp_and:l AND exp_and:r
+exp             ::= exp:l AND exp:r
                     {: RESULT = new And( l, r ); :}
                 | exp_lt:e
                     {: RESULT = e; :}
