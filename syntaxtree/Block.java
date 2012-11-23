@@ -5,7 +5,8 @@ import visitor.TypeVisitor;
 public class Block extends Statement {
   public StatementList sl;
 
-  public Block(StatementList asl) {
+  public Block(StatementList asl, int l, int c) {
+    super( l, c );
     sl=asl;
   }
 

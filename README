@@ -1,0 +1,18 @@
+Daniel Motles
+dmm141@pitt.edu
+
+build:
+run make on any unix-like system. You will be prompted during the build process.
+
+run:
+MJPP is a helper shell script I use to "launch" the program with the correct classpath
+you can also do
+
+java -classpath ".:/path/2/javacup" MiniJavaPrettyPrinter
+
+lastly, the test files I used are in tests/
+
+I have included everything for sake of correctness.
+
+COOL THING:
+if you don't supply command-line options, you can use stdin

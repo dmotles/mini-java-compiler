@@ -4,7 +4,8 @@ import visitor.TypeVisitor;
 
 public class IdentifierExp extends Exp {
   public String s;
-  public IdentifierExp(String as) { 
+  public IdentifierExp(String as, int l, int c ) {
+      super( l,c );
     s=as;
   }
 

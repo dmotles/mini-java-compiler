@@ -9,12 +9,13 @@ public class MethodDecl {
   public VarDeclList vl;
   public StatementList sl;
   public Exp e;
+  public int line, col;
 
-  public MethodDecl(Type at, Identifier ai, FormalList afl, VarDeclList avl, 
-                    StatementList asl, Exp ae) {
-    t=at; i=ai; fl=afl; vl=avl; sl=asl; e=ae;
+  public MethodDecl(Type at, Identifier ai, FormalList afl, VarDeclList avl,
+                    StatementList asl, Exp ae, int l, int c) {
+    t=at; i=ai; fl=afl; vl=avl; sl=asl; e=ae; line = l; col = c;
   }
- 
+
   public void accept(Visitor v) {
     v.visit(this);
   }

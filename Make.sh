@@ -19,6 +19,6 @@ banner() {
 
 banner "Building Parser" && java -jar ${JAVACUP} -parser MiniJavaParser MiniJavaParser.cup || true && \
 banner "Building Lexer" && jflex MiniJavaLexer.flex || true && \
-banner "Compiling AST Classes" && javac $JFLAGS syntaxtree/*.java visitor/*.java || true && \
+banner "Compiling AST Classes" && javac $JFLAGS syntaxtree/*.java visitor/*.java semantic/*.java || true && \
 banner "Compiling Student and Generated Code" && javac $JFLAGS *.java
 exit $?

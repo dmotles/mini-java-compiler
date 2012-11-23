@@ -8,8 +8,8 @@ import syntaxtree.*;
 
 parser code {:
     public void syntax_error( Symbol cur_token ) {
-        String msg  = "Syntax Error at line: " + (cur_token.left+1); 
-        msg         += " col: " + (cur_token.right+1) ;
+        String msg  = "Syntax Error at line: " + (cur_token.left); 
+        msg         += " col: " + (cur_token.right) ;
         msg         += " Symbol: " + cur_token.toString();
         msg         += " Parser State: " + cur_token.parse_state;
         report_error( msg, null );
@@ -102,17 +102,17 @@ start with program;
 program         ::= main_class:m class_decl_list:cl
                     {:  RESULT = new Program( m, cl ); :}
                 ;
-main_class      ::= CLASS ident:ci LBRACE
+main_class      ::= CLASS:clss ident:ci LBRACE
                     PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ident:si RPAREN
                     LBRACE statement:s RBRACE RBRACE
-                    {: RESULT = new MainClass( ci, si, s ); :}
+                    {: RESULT = new MainClass( ci, si, s, clssleft, clssright ); :}
                 ;
-class_decl      ::= CLASS ident:ci LBRACE var_decl_list:vdl method_decl_list:mdl RBRACE
-                    {: RESULT = new ClassDeclSimple( ci, vdl, mdl ); :}
+class_decl      ::= CLASS:clss ident:ci LBRACE var_decl_list:vdl method_decl_list:mdl RBRACE
+                    {: RESULT = new ClassDeclSimple( ci, vdl, mdl, clssleft, clssright ); :}
                 |
-                CLASS ident:ci EXTENDS ident:ei LBRACE
+                CLASS:clss ident:ci EXTENDS ident:ei LBRACE
                 var_decl_list:vdl method_decl_list:mdl RBRACE
-                    {: RESULT = new ClassDeclExtends( ci, ei, vdl, mdl ); :}
+                    {: RESULT = new ClassDeclExtends( ci, ei, vdl, mdl, clssleft, clssright ); :}
                 ;
 class_decl_list ::= class_decl_list:cdl class_decl:cd
                     {: cdl.addElement(cd); RESULT = cdl; :}
@@ -120,7 +120,7 @@ class_decl_list ::= class_decl_list:cdl class_decl:cd
                     {: RESULT = new ClassDeclList(); :}
                 ;
 var_decl        ::= type:t ident:i SEMICOLON
-                    {: RESULT = new VarDecl( t, i ); :}
+                    {: RESULT = new VarDecl( t, i, i.line, i.col ); :}
                 ;
 var_decl_list   ::= var_decl_list:vdl var_decl:vd
                     {:
@@ -130,9 +130,9 @@ var_decl_list   ::= var_decl_list:vdl var_decl:vd
                 |
                     {: RESULT = new VarDeclList(); :}
                 ;
-method_decl     ::= PUBLIC type:t ident:i LPAREN formal_list:fl RPAREN
+method_decl     ::= PUBLIC:pub type:t ident:i LPAREN formal_list:fl RPAREN
                     LBRACE var_decl_list:vdl statement_list:sl RETURN exp:e SEMICOLON RBRACE
-                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e ); :}
+                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e, publeft, pubright ); :}
                 ;
 method_decl_list ::= method_decl_list:mdl method_decl:md
                     {: mdl.addElement(md); RESULT = mdl; :}
@@ -142,7 +142,7 @@ method_decl_list ::= method_decl_list:mdl method_decl:md
 formal_list     ::= type:t ident:id formal_rest:fl
                     {:
                         FormalList newfl = new FormalList();
-                        newfl.addElement( new Formal( t, id ) );
+                        newfl.addElement( new Formal( t, id, t.line, t.col ) );
                         for( int i = 0; i < fl.size(); i++) {
                             newfl.addElement( fl.elementAt(i) );
                         }
@@ -152,32 +152,32 @@ formal_list     ::= type:t ident:id formal_rest:fl
                     {: RESULT = new FormalList(); :}
                 ;
 formal_rest     ::= formal_rest:fl COMMA type:t ident:i
-                    {: fl.addElement( new Formal( t, i ) ); RESULT = fl; :}
+                    {: fl.addElement( new Formal( t, i, t.line, t.col ) ); RESULT = fl; :}
                 |
                     {: RESULT = new FormalList(); :}
                 ;
 
-type            ::= BOOLEAN
-                    {: RESULT = new BooleanType(); :}
+type            ::= BOOLEAN:b
+                    {: RESULT = new BooleanType( bleft, bright ); :}
                 | IDENTIFIER:type
-                    {: RESULT = new IdentifierType( type ); :}
-                | INT
-                    {: RESULT = new IntegerType(); :}
-                | INT LBRACKET RBRACKET
-                    {: RESULT = new IntArrayType(); :}
+                    {: RESULT = new IdentifierType( type, typeleft, typeright ); :}
+                | INT:i
+                    {: RESULT = new IntegerType( ileft, iright ); :}
+                | INT:i LBRACKET RBRACKET
+                    {: RESULT = new IntArrayType( ileft, iright ); :}
                 ;
-statement      ::= LBRACE statement_list:sl RBRACE
-                    {: RESULT = new Block( sl ); :}
-                | IF LPAREN exp:e RPAREN statement:si ELSE statement:se
-                    {: RESULT = new If( e, si, se ); :}
-                | WHILE LPAREN exp:e RPAREN statement:s
-                    {: RESULT = new While( e, s ); :}
-                | PRINTLN LPAREN exp:e RPAREN SEMICOLON
-                    {: RESULT = new Print( e ); :}
+statement      ::= LBRACE:lbr statement_list:sl RBRACE
+                    {: RESULT = new Block( sl, lbrleft, lbrright ); :}
+                | IF:i LPAREN exp:e RPAREN statement:si ELSE statement:se
+                    {: RESULT = new If( e, si, se, ileft, iright ); :}
+                | WHILE:w LPAREN exp:e RPAREN statement:s
+                    {: RESULT = new While( e, s, wleft, wright ); :}
+                | PRINTLN:p LPAREN exp:e RPAREN SEMICOLON
+                    {: RESULT = new Print( e, pleft,pright ); :}
                 | ident:id EQUALS exp:e SEMICOLON
-                    {: RESULT = new Assign( id, e ); :}
+                    {: RESULT = new Assign( id, e, id.line, id.col ); :}
                 | ident:id LBRACKET exp:ai RBRACKET EQUALS exp:e SEMICOLON
-                    {: RESULT = new ArrayAssign( id, ai, e ); :}
+                    {: RESULT = new ArrayAssign( id, ai, e, id.line, id.col ); :}
                 ;
 
 statement_list  ::= statement:s statement_list:sl
@@ -197,58 +197,58 @@ statement_list  ::= statement:s statement_list:sl
                     {: RESULT = new StatementList(); :}
                 ;
 
-exp             ::= exp:l AND exp:r
-                    {: RESULT = new And( l, r ); :}
+exp             ::= exp:l AND:a exp:r
+                    {: RESULT = new And( l, r, aleft, aright ); :}
                 | exp_lt:e
                     {: RESULT = e; :}
                 ;
 
-exp_lt          ::= exp_lt:l LESSTHAN exp_lt:r
-                    {: RESULT = new LessThan( l, r ); :}
+exp_lt          ::= exp_lt:l LESSTHAN:lt exp_lt:r
+                    {: RESULT = new LessThan( l, r, ltleft, ltright ); :}
                 | exp_plusminus:e
                     {: RESULT = e; :}
                 ;
 
-exp_plusminus   ::= exp_plusminus:l PLUS exp_plusminus:r
-                    {: RESULT = new Plus( l , r ); :}
-                | exp_plusminus:l MINUS exp_plusminus:r
-                    {: RESULT = new Minus( l, r ); :}
+exp_plusminus   ::= exp_plusminus:l PLUS:p exp_plusminus:r
+                    {: RESULT = new Plus( l , r, pleft, pright ); :}
+                | exp_plusminus:l MINUS:m exp_plusminus:r
+                    {: RESULT = new Minus( l, r, mleft, mright ); :}
                 | exp_times:e
                     {: RESULT = e; :}
                 ;
 
-exp_times       ::= exp_times:l TIMES exp_times:r
-                    {: RESULT = new Times( l, r ); :}
+exp_times       ::= exp_times:l TIMES:t exp_times:r
+                    {: RESULT = new Times( l, r, tleft, tright ); :}
                 | exp_not:e
                     {: RESULT = e; :}
                 ;
 
-exp_not         ::= BANG exp_not:e
-                    {: RESULT = new Not( e ); :}
+exp_not         ::= BANG:b exp_not:e
+                    {: RESULT = new Not( e, bleft, bright ); :}
                 | exp_first:e
                     {: RESULT = e; :}
                 ;
 exp_first       ::= exp_first:object DOT ident:method LPAREN exp_list:args RPAREN
-                    {: RESULT = new Call( object, method, args ); :}
-                | exp_first:arr DOT LENGTH
-                    {: RESULT = new ArrayLength( arr ); :}
-                | exp_first:arr LBRACKET exp:e RBRACKET
-                    {: RESULT = new ArrayLookup( arr, e ); :}
+                    {: RESULT = new Call( object, method, args, method.line, method.col ); :}
+                | exp_first:arr DOT LENGTH:len
+                    {: RESULT = new ArrayLength( arr, lenleft, lenright ); :}
+                | exp_first:arr LBRACKET:lb exp:e RBRACKET
+                    {: RESULT = new ArrayLookup( arr, e, lbleft, lbright ); :}
                 | exp_T:e
                     {: RESULT = e; :}
                 ;
 
-exp_T           ::= NEW ident:id LPAREN RPAREN
-                    {: RESULT = new NewObject( id ); :}
-                | NEW INT LBRACKET exp:e RBRACKET
-                    {: RESULT = new NewArray( e ); :}
+exp_T           ::= NEW:n ident:id LPAREN RPAREN
+                    {: RESULT = new NewObject( id, nleft, nright ); :}
+                | NEW:n INT LBRACKET exp:e RBRACKET
+                    {: RESULT = new NewArray( e, nleft, nright ); :}
                 | INTLITERAL:i
-                    {: RESULT = new IntegerLiteral( i.intValue() ); :}
+                    {: RESULT = new IntegerLiteral( i.intValue(), ileft, iright ); :}
                 | IDENTIFIER:s
-                    {: RESULT = new IdentifierExp( s ); :}
-                | TRUE {: RESULT = new True(); :}
-                | FALSE {: RESULT = new False(); :}
-                | THIS {: RESULT = new This(); :}
+                    {: RESULT = new IdentifierExp( s, sleft, sright ); :}
+                | TRUE:e {: RESULT = new True( eleft, eright ); :}
+                | FALSE:e {: RESULT = new False( eleft, eright ); :}
+                | THIS:e {: RESULT = new This( eleft, eright ); :}
                 | LPAREN exp:e RPAREN {: RESULT = e; :}
                 ;
 
@@ -273,5 +273,5 @@ exp_rest        ::= exp_rest:er COMMA exp:e
                     {: RESULT = new ExpList(); :}
                 ;
 ident           ::= IDENTIFIER:s
-                {: RESULT = new Identifier(s); :}
+                {: RESULT = new Identifier(s, sleft, sright ); :}
                 ;

@@ -6,7 +6,8 @@ public class If extends Statement {
   public Exp e;
   public Statement s1,s2;
 
-  public If(Exp ae, Statement as1, Statement as2) {
+  public If(Exp ae, Statement as1, Statement as2, int l, int c) {
+    super( l, c );
     e=ae; s1=as1; s2=as2;
   }
 

@@ -5,7 +5,8 @@ import visitor.TypeVisitor;
 public class IdentifierType extends Type {
   public String s;
 
-  public IdentifierType(String as) {
+  public IdentifierType(String as, int l, int c) {
+    super( l, c );
     s=as;
   }
 

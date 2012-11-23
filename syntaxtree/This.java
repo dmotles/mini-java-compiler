@@ -3,6 +3,9 @@ import visitor.Visitor;
 import visitor.TypeVisitor;
 
 public class This extends Exp {
+    public This( int l, int c ) {
+        super(l,c);
+    }
   public void accept(Visitor v) {
     v.visit(this);
   }

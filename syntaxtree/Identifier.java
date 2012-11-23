@@ -4,8 +4,10 @@ import visitor.TypeVisitor;
 
 public class Identifier {
   public String s;
+  public int line, col;
 
-  public Identifier(String as) { 
+  public Identifier(String as , int l, int c) {
+      line = l; col = c;
     s=as;
   }
 

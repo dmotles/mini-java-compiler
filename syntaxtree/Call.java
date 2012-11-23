@@ -7,7 +7,8 @@ public class Call extends Exp {
   public Identifier i;
   public ExpList el;
   
-  public Call(Exp ae, Identifier ai, ExpList ael) {
+  public Call(Exp ae, Identifier ai, ExpList ael, int l, int c) {
+    super( l, c );
     e=ae; i=ai; el=ael;
   }
 

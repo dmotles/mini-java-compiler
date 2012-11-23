@@ -2,3 +2,6 @@ MiniJavaLexer.java*
 MiniJavaParser.java
 parserout.txt
 sym.java
+*.old
+*.presuper
+tags

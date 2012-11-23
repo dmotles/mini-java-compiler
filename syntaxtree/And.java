@@ -4,8 +4,9 @@ import visitor.TypeVisitor;
 
 public class And extends Exp {
   public Exp e1,e2;
-  
-  public And(Exp ae1, Exp ae2) { 
+
+  public And(Exp ae1, Exp ae2, int l, int c) {
+    super( l, c );
     e1=ae1; e2=ae2;
   }
 

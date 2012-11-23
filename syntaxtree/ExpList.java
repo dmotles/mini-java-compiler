@@ -5,7 +5,7 @@ import java.util.Vector;
 public class ExpList {
    private Vector list;
 
-   public ExpList() {
+   public ExpList( ) {
       list = new Vector();
    }
 
@@ -13,11 +13,11 @@ public class ExpList {
       list.addElement(n);
    }
 
-   public Exp elementAt(int i)  { 
-      return (Exp)list.elementAt(i); 
+   public Exp elementAt(int i)  {
+      return (Exp)list.elementAt(i);
    }
 
-   public int size() { 
-      return list.size(); 
+   public int size() {
+      return list.size();
    }
 }

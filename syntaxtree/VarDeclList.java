@@ -13,11 +13,11 @@ public class VarDeclList {
       list.addElement(n);
    }
 
-   public VarDecl elementAt(int i)  { 
-      return (VarDecl)list.elementAt(i); 
+   public VarDecl elementAt(int i)  {
+      return (VarDecl)list.elementAt(i);
    }
 
-   public int size() { 
-      return list.size(); 
+   public int size() {
+      return list.size();
    }
 }

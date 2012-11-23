@@ -5,7 +5,7 @@ import java.util.Vector;
 public class FormalList {
    private Vector list;
 
-   public FormalList() {
+   public FormalList( ) {
       list = new Vector();
    }
 
@@ -13,11 +13,11 @@ public class FormalList {
       list.addElement(n);
    }
 
-   public Formal elementAt(int i)  { 
-      return (Formal)list.elementAt(i); 
+   public Formal elementAt(int i)  {
+      return (Formal)list.elementAt(i);
    }
 
-   public int size() { 
-      return list.size(); 
+   public int size() {
+      return list.size();
    }
 }
