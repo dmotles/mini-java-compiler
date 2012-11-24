@@ -156,6 +156,7 @@ class SymbolTree<T> {
  * @version 0.1
  */
 public class SymbolTable {
+    private static final boolean DEBUG = true;
     private HashMap< String, ClassSymbol > classes;
     private HashMap< String, MethodSymbol > methods;
     private SymbolTree<VariableSymbol> vars;
@@ -180,14 +181,14 @@ public class SymbolTable {
     }
 
     public void enterScope( String name ) {
-        if( ! vars.push( name ) ) {
-            throw new Error( "No scope exists at this level with name" + name );
+        if( ! vars.push( name ) && DEBUG ) {
+            System.err.println( "No scope exists at this level with name " + name );
         }
     }
 
     public void leaveScope() {
-        if( ! vars.pop() ) {
-            throw new Error( "You popped too many scopes off - you are already"
+        if( ! vars.pop() && DEBUG ) {
+            System.err.println( "You popped too many scopes off - you are already"
                     + " at the most outer scope. " );
         }
     }
