@@ -11,21 +11,21 @@ import syntaxtree.Type;
  * @author Daniel Motles
  * @version 0.1
  */
-class VariableSymbolTree {
+class SymbolTree<T> {
     private static final int TOSTRING_INDENT_SPACES = 30;
     private static final String TOSTR_FMT = "%-" + TOSTRING_INDENT_SPACES
         + "s";
 
-    VariableSymbolTreeNode root;
-    VariableSymbolTreeNode curNode;
+    SymbolTreeNode<T> root;
+    SymbolTreeNode<T> curNode;
 
-    public VariableSymbolTree() {
-        curNode = new VariableSymbolTreeNode();
+    public SymbolTree() {
+        curNode = new SymbolTreeNode<T>();
         root = curNode;
     }
     public boolean push( String scope ) {
         boolean ret = false;
-        VariableSymbolTreeNode next = curNode.descend( scope );
+        SymbolTreeNode<T> next = curNode.descend( scope );
         if( next != null ) {
             ret = true;
             curNode = next;
@@ -34,7 +34,7 @@ class VariableSymbolTree {
     }
     public boolean pop() {
         boolean ret = false;
-        VariableSymbolTreeNode next = curNode.ascend();
+        SymbolTreeNode<T> next = curNode.ascend();
         if( next != null ) {
             ret = true;
             curNode = next;
@@ -42,14 +42,14 @@ class VariableSymbolTree {
         return ret;
     }
     public boolean addChildScope( String name ) {
-        VariableSymbolTreeNode n = curNode.addChildScope( name );
+        SymbolTreeNode<T> n = curNode.addChildScope( name );
         if( n != null ) {
             curNode = n;
             return true;
         }
         return false;
     }
-    public VariableSymbol lookup( String id ) {
+    public T lookup( String id ) {
         return curNode.lookup( id );
     }
 
@@ -57,7 +57,7 @@ class VariableSymbolTree {
         return root.toString();
     }
 
-    public boolean addSymbol( String id, VariableSymbol s ) {
+    public boolean addSymbol( String id, T s ) {
         return curNode.addSymbol( id, s );
     }
 
@@ -69,21 +69,21 @@ class VariableSymbolTree {
      * @author Daniel Motles
      * @version 0.1
      */
-    private class VariableSymbolTreeNode {
-        HashMap< String, VariableSymbolTreeNode > children;
-        HashMap< String, VariableSymbol > vars;
-        VariableSymbolTreeNode parent;
+    private class SymbolTreeNode<U> {
+        HashMap< String, SymbolTreeNode<U> > children;
+        HashMap< String, U > vars;
+        SymbolTreeNode<U> parent;
 
-        public VariableSymbolTreeNode() {
+        public SymbolTreeNode() {
             parent = null;
-            children = new HashMap<String,VariableSymbolTreeNode>();
-            vars = new HashMap< String, VariableSymbol >();
+            children = new HashMap<String,SymbolTreeNode<U>>();
+            vars = new HashMap< String, U >();
         }
-        public VariableSymbolTreeNode( VariableSymbolTreeNode p ) {
+        public SymbolTreeNode( SymbolTreeNode<U> p ) {
             this();
             parent = p;
         }
-        public boolean addSymbol( String id, VariableSymbol s ) {
+        public boolean addSymbol( String id, U s ) {
             boolean ret = false;
             String intern = id.intern();
             if( vars.get(intern) == null ) {
@@ -92,24 +92,24 @@ class VariableSymbolTree {
             }
             return ret;
         }
-        public VariableSymbolTreeNode descend( String child ) {
+        public SymbolTreeNode<U> descend( String child ) {
             return children.get( child.intern() );
         }
-        public VariableSymbolTreeNode ascend() {
+        public SymbolTreeNode<U> ascend() {
             return parent;
         }
-        public VariableSymbolTreeNode addChildScope( String name ) {
+        public SymbolTreeNode<U> addChildScope( String name ) {
             String id = name.intern();
-            VariableSymbolTreeNode existing = children.get( id );
+            SymbolTreeNode<U> existing = children.get( id );
             if( existing == null ) {
-                VariableSymbolTreeNode n = new VariableSymbolTreeNode( this );
+                SymbolTreeNode<U> n = new SymbolTreeNode<U>( this );
                 children.put( id, n );
                 return n;
             }
             return null; // child scope exists already.
         }
-        public VariableSymbol lookup( String id ) {
-            VariableSymbol v = vars.get( id.intern() );
+        public U lookup( String id ) {
+            U v = vars.get( id.intern() );
             if( v != null ) {
                 return v;
             } else {
@@ -126,7 +126,7 @@ class VariableSymbolTree {
 
         private String toString( int depth ) {
             StringBuilder sb = new StringBuilder();
-            for( VariableSymbol v : vars.values() )
+            for( U v : vars.values() )
                 sb.append( String.format("%s" + TOSTR_FMT
                             + "\n", tabs(depth), v.toString() ) );
             for( String k : children.keySet() ) {
@@ -158,12 +158,12 @@ class VariableSymbolTree {
 public class SymbolTable {
     private HashMap< String, ClassSymbol > classes;
     private HashMap< String, MethodSymbol > methods;
-    private VariableSymbolTree vars;
+    private SymbolTree<VariableSymbol> vars;
     private String lastAddedClass;
     public SymbolTable() {
         classes = new HashMap<String, ClassSymbol>();
         methods = new HashMap<String, MethodSymbol>();
-        vars = new VariableSymbolTree();
+        vars = new SymbolTree<VariableSymbol>();
         lastAddedClass = null;
     }
     public VariableSymbol lookupVariable( String name ) {
