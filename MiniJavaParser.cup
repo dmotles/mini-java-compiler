@@ -130,9 +130,9 @@ var_decl_list   ::= var_decl_list:vdl var_decl:vd
                 |
                     {: RESULT = new VarDeclList(); :}
                 ;
-method_decl     ::= PUBLIC:pub type:t ident:i LPAREN formal_list:fl RPAREN
+method_decl     ::= PUBLIC type:t ident:i LPAREN formal_list:fl RPAREN
                     LBRACE var_decl_list:vdl statement_list:sl RETURN exp:e SEMICOLON RBRACE
-                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e, publeft, pubright ); :}
+                    {: RESULT = new MethodDecl( t, i, fl, vdl, sl, e, i.line, i.col ); :}
                 ;
 method_decl_list ::= method_decl_list:mdl method_decl:md
                     {: mdl.addElement(md); RESULT = mdl; :}

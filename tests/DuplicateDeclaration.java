@@ -14,4 +14,19 @@ class OtherClass {
         a = 2;
         return a;
     }
+
+    public int go( int a ) {
+        UndefinedClass object;
+        object = new UndefinedClass();
+
+        return 1;
+    }
+}
+
+
+
+class OtherClass {
+    public int notCalled() {
+        return 0;
+    }
 }

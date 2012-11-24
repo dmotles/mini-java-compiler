@@ -93,7 +93,7 @@ public class MiniJavaSymbolTableGenerator {
             parserGoalSymbol = (DEBUG_PARSE) ? parser.debug_parse() : parser.parse();
             p = (Program)parserGoalSymbol.value;
             p.accept( SYMBOL_TABLE_BUILDER );
-            SymbolTable lastSymTable = SYMBOL_TABLE_BUILDER.getSymbolTable();
+            SymbolTable lastSymTable = SYMBOL_TABLE_BUILDER.getLastSymbolTable();
             System.out.println( lastSymTable.toString() );
 
         } catch (IOException e) {
