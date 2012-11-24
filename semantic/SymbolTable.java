@@ -158,12 +158,12 @@ class SymbolTree<T> {
 public class SymbolTable {
     private static final boolean DEBUG = true;
     private HashMap< String, ClassSymbol > classes;
-    private HashMap< String, MethodSymbol > methods;
+    private HashMap< String, HashMap<String,MethodSymbol> > methods;
     private SymbolTree<VariableSymbol> vars;
     private String lastAddedClass;
     public SymbolTable() {
         classes = new HashMap<String, ClassSymbol>();
-        methods = new HashMap<String, MethodSymbol>();
+        methods = new HashMap<String, HashMap<String,MethodSymbol>>();
         vars = new SymbolTree<VariableSymbol>();
         lastAddedClass = null;
     }
@@ -172,8 +172,10 @@ public class SymbolTable {
     }
 
     public MethodSymbol lookupMethod( String classname, String method ) {
-        String lookuptag = classname.concat( method );
-        return methods.get( lookuptag.intern() );
+        HashMap<String, MethodSymbol> decl_set = methods.get( method.intern() );
+        if( decl_set != null )
+            return decl_set.get( classname.intern() );
+        return null;
     }
 
     public ClassSymbol lookupClass( String name ) {
@@ -201,17 +203,22 @@ public class SymbolTable {
         return null;
     }
     public MethodSymbol addMethod( String id, Type ret, int line, int col ) {
-        String methodtag = lastAddedClass + id;
-        String intern = methodtag.intern();
-        MethodSymbol m = new MethodSymbol( methodtag, line, col, ret );
-        if( methods.get( intern ) == null ) {
-            methods.put( intern, m );
-            if( ! vars.addChildScope( id ) ) {
-                throw new Error( "Fatal: could not add new child scope (already exists?) ");
-            }
-            return m;
+        MethodSymbol m = new MethodSymbol( id, line, col, ret );
+        id = id.intern();
+        HashMap< String, MethodSymbol > decl_map = methods.get( id );
+        if( decl_map == null ) {
+            decl_map = new HashMap< String, MethodSymbol >();
+            decl_map.put( lastAddedClass, m );
+            methods.put( id, decl_map );
+        } else if( ! decl_map.containsKey( lastAddedClass ) ) {
+            decl_map.put( lastAddedClass, m );
+        } else {
+            return null;
         }
-        return null;
+        if( ! vars.addChildScope( id ) ) {
+            throw new Error( "Fatal: could not add new child scope (already exists?) ");
+        }
+        return m;
     }
 
     public ClassSymbol addClass( String id, int line, int col ) {
@@ -219,7 +226,7 @@ public class SymbolTable {
         if( ! classes.containsKey( intern ) ) {
             ClassSymbol c = new ClassSymbol( id, line, col );
             classes.put( intern, c );
-            lastAddedClass = id;
+            lastAddedClass = intern;
             if( ! vars.addChildScope( id ) ) {
                 throw new Error( "Fatal: could not add new child scope (already exists?) ");
             }
@@ -233,7 +240,7 @@ public class SymbolTable {
         if( ! classes.containsKey( intern ) ) {
             ClassSymbol c = new ClassSymbol( id, line, col, e );
             classes.put( intern, c );
-            lastAddedClass = id;
+            lastAddedClass = intern;
             if( ! vars.addChildScope( id ) ) {
                 throw new Error( "Fatal: could not add new child scope (already exists?) ");
             }
@@ -249,8 +256,9 @@ public class SymbolTable {
             sb.append( String.format("%s\n", c.toString() ) );
         }
         sb.append( "Methods:\n" );
-        for( MethodSymbol m : methods.values() ) {
-            sb.append( String.format("%s\n", m.toString() ) );
+        for( HashMap<String,MethodSymbol>decmap : methods.values() ) {
+            for( MethodSymbol m : decmap.values() )
+                sb.append( String.format("%s\n", m.toString() ) );
         }
         sb.append( "Variables:\n" );
         sb.append( vars.toString() );
