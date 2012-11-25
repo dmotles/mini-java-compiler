@@ -59,13 +59,20 @@ public class BuildSymbolTableVisitor implements Visitor {
             n.cl.elementAt(i).accept(this);
         }
 
+        checkIssues( "Symbol Table Construction" );
+
         CheckUndefinedVisitor udef = new CheckUndefinedVisitor( );
         n.accept( udef );
 
+        checkIssues( "Name Analysis" );
+
+    }
+
+    private void checkIssues( String phase ) {
         if( issues.size() > 0 ) {
             while( issues.size() > 0 )
                 System.err.println( issues.poll() );
-            throw new NameAnalysisException( "Errors detected during name analysis phase." );
+            throw new NameAnalysisException( "Errors detected during " + phase + " phase." );
         }
     }
 
@@ -503,6 +510,8 @@ public class BuildSymbolTableVisitor implements Visitor {
         // ExpList el;
         public void visit(Call n) {
             n.e.accept(this);
+            if( ! symbolTable.methodExistsSomewhere( n.i.s ) )
+                noDef( n.i.s, n.i.line, n.i.col );
             for ( int i = 0; i < n.el.size(); i++ ) {
                 n.el.elementAt(i).accept(this);
             }

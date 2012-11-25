@@ -107,12 +107,12 @@ main_class      ::= CLASS:clss ident:ci LBRACE
                     LBRACE statement:s RBRACE RBRACE
                     {: RESULT = new MainClass( ci, si, s, clssleft, clssright ); :}
                 ;
-class_decl      ::= CLASS:clss ident:ci LBRACE var_decl_list:vdl method_decl_list:mdl RBRACE
-                    {: RESULT = new ClassDeclSimple( ci, vdl, mdl, clssleft, clssright ); :}
+class_decl      ::= CLASS ident:ci LBRACE var_decl_list:vdl method_decl_list:mdl RBRACE
+                    {: RESULT = new ClassDeclSimple( ci, vdl, mdl, ci.line, ci.col ); :}
                 |
-                CLASS:clss ident:ci EXTENDS ident:ei LBRACE
+                CLASS ident:ci EXTENDS ident:ei LBRACE
                 var_decl_list:vdl method_decl_list:mdl RBRACE
-                    {: RESULT = new ClassDeclExtends( ci, ei, vdl, mdl, clssleft, clssright ); :}
+                    {: RESULT = new ClassDeclExtends( ci, ei, vdl, mdl, ci.line, ci.col ); :}
                 ;
 class_decl_list ::= class_decl_list:cdl class_decl:cd
                     {: cdl.addElement(cd); RESULT = cdl; :}
