@@ -2,13 +2,15 @@
 A joint project by Dan Motles and Nee Taylor aka Cash Money Enterprises.
 
 ## Path Structure
-### .
+
+### ./
 - MJPP - a script to make running the pretty printer easier (not involved in project)
 - MiniJavaLexer.flex/java - lexer
 - MiniJavaParser.cup/java - the parser (no error checking, but modified to include passing lines/col# to AST)
 - MiniJavaPrettyPrinter.java - the pretty printer (project 3a)
 - MiniJavaSymbolTableGenerator.java - driver program to test the symbol table generator
 - Makefile and Make.sh - build the project. I gave up on using a pure makefile to build and just have makefile call the sh script.
+
 ### semantic/
 This directory holds the classes for semantic analysis
 - ClassSymbol - represents a class definition. Used to check IdentifierTypes
@@ -18,8 +20,10 @@ This directory holds the classes for semantic analysis
 - SymbolFunction - enum that allows me to define a symbol's function (i.e. it's like a tag for the symbol type variable/class/method)
 - SymbolType - probably stupid idea - but this class is like an easier to use representation of the symbol's type (int/intarray/bool/idtype). Ultimately might be stupid but idk. Started as an enum, turned into a class so it could hold the name of the ID type.
 - SymbolTable - represents the datastructure holding the symboltable. This is what IR will interact with.
+
 ### syntaxtree/
 Provided by author. All classes have been modified to accept line numbers ( except list classes like explist etc. )
+
 ### visitor/
 - BuildSymbolTableVisitor.java is the symbol table visitor.
 (Coming soon)
