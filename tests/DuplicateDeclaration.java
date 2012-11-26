@@ -5,7 +5,6 @@ class DuplicateDeclaration {
 }
 
 class OtherClass {
-
     public int go() {
         int a;
         int c;
@@ -15,18 +14,23 @@ class OtherClass {
         return a;
     }
 
-    public int go( int a ) {
-        UndefinedClass object;
-        object = new UndefinedClass();
-
-        return 1;
+    public OtherClass go() {
+        return this;
     }
 }
 
 
+class NotOther {
+    // a dup method, but in another class
+    public int go( boolean tf ){
+        System.out.println( tf );
+        return 10;
+    }
+}
+
 
 class OtherClass {
-    public int notCalled() {
-        return 0;
+    public int [] newArray( int size ) {
+        return new int[size];
     }
 }

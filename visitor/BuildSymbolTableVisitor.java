@@ -66,6 +66,8 @@ public class BuildSymbolTableVisitor implements Visitor {
 
         checkIssues( "Name Analysis" );
 
+        n.accept( new TypeCheckingVisitor(symbolTable) );
+
     }
 
     private void checkIssues( String phase ) {
@@ -79,7 +81,7 @@ public class BuildSymbolTableVisitor implements Visitor {
     // Identifier i1,i2;
     // Statement s;
     public void visit(MainClass n) {
-        if( symbolTable.addClass( n.i1.toString(), n.line, n.col ) == null ) {
+        if( symbolTable.addMainClass( n.i1.toString(), n.line, n.col ) == null ) {
             duplicateDef( n.i1.toString(), n.line, n.col );
         } else {
             symbolTable.leaveScope();

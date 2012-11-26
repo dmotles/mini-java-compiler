@@ -1,6 +1,7 @@
 package semantic;
 public enum SymbolFunction {
     CLASS("Class"),
+    MAINCLASS("MainClass"),
     METHOD("Method"),
     VAR("Variable");
 

@@ -37,5 +37,5 @@ if [ ! -e $JAVACUP ]; then
     esac
 fi
 
-java -classpath ".:java-cup-11a.jar" MiniJavaPrettyPrinter $@
+java -classpath ".:java-cup-11a.jar" MiniJavaSymbolTableGenerator $@
 exit $?

@@ -213,6 +213,7 @@ public class SymbolTable {
     /**
      * Leaves current scope. If you are already at the outermost scope, nothing
      * will happen but you will see a warning message in the console if DEBUG=true.
+     */
     public void leaveScope() {
         if( ! vars.pop() && DEBUG ) {
             System.err.println( "You popped too many scopes off - you are already"
@@ -257,6 +258,20 @@ public class SymbolTable {
         return m;
     }
 
+    public MainClassSymbol addMainClass( String id, int line, int col ) {
+        id = id.intern();
+        if( ! classes.containsKey( id ) ) {
+            MainClassSymbol c = new MainClassSymbol( id, line, col );
+            if( ! vars.addChildScope( id ) ) {
+                throw new Error( "Fatal: could not add new child scope (already exists?) ");
+            }
+            classes.put( id, c );
+            activeScopes.push( id );
+            return c;
+        }
+        return null;
+    }
+
     /**
      * Adds new class symbol. IR doesn't need to worry abut this.
      */
@@ -296,7 +311,7 @@ public class SymbolTable {
      */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append( "++++ Classes ++++n" );
+        sb.append( "++++ Classes ++++\n" );
         for( ClassSymbol c : classes.values() ) {
             sb.append( String.format("%s\n", c.toString() ) );
         }
@@ -320,17 +335,12 @@ public class SymbolTable {
     }
 
     /**
-     * Returns the current SymbolType of "this". Another way to look at it
-     * is to say it returns the current class scope. Returns null
-     * if you are not in any encomapssing classes.
+     * Returns current ClassSymbol that the program is in.
      *
      */
-    public SymbolType getCurThisType() {
+    public ClassSymbol getCurActiveClassScope() {
         if( activeScopes.size() > 0 ) {
-            ClassSymbol c = classes.get( activeScopes.get(0) );
-            if( c != null ) {
-                return c.type;
-            }
+            return classes.get( activeScopes.get(0) );
         }
         return null;
     }

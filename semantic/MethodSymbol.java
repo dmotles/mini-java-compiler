@@ -15,4 +15,8 @@ public class MethodSymbol extends Symbol {
     public boolean addParamType( Type t ) {
         return paramTypes.add( SymbolType.get( t ) );
     }
+
+    public ArrayList<SymbolType> argTypes() {
+        return paramTypes;
+    }
 }
