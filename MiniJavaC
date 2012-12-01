@@ -1,0 +1,41 @@
+#/bin/sh
+#
+# CS1622 Project 3
+# Daniel Motles
+# dmm141@pitt.edu
+[ -z $JAVACUP ] && JAVACUP=java-cup-11a.jar
+
+if [ ! -e $JAVACUP ]; then
+    echo "WARNING: the javacup jar path does not appear to exist. The program will not run without it!"
+    echo -n "Do you want to try searching from the current directory for the .jar? [y/n]:"
+    read yn
+    case $yn in
+        [Yy])
+            choices=`find . -name 'java-cup*'`
+            if [ -z $choices ]; then
+                echo "No matches found :( Try specifying the classpath of JavaCUP using the \$JAVACUP envvar if the program fails to run."
+            else
+                oldifs=$IFS
+                IFS="
+"
+                for match in $choices; do
+                    echo -n "Use \"$match\" as JavaCUP classpath? [y/n]:"
+                    read use
+                    case $use in
+                        [Yy])
+                            JAVACUP=$match
+                            break
+                            ;;
+                    esac
+                done
+
+                IFS=$oldifs
+            fi
+            ;;
+        *)
+            echo "Reminder: if program fails to run, set the path to the JavaCUP library by setting your shell's \$JAVACUP variable."
+    esac
+fi
+
+java -classpath ".:java-cup-11a.jar" MiniJavaC $@
+exit $?

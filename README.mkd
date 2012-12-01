@@ -28,3 +28,7 @@ Provided by author. All classes have been modified to accept line numbers ( exce
 - BuildSymbolTableVisitor.java is the symbol table visitor.
 (Coming soon)
 - TypeCheckingVisitor.java will be called by Build symbol Table to do the dirty of doing type checking.
+
+## Build/Run
+
+Build with make, run with MiniJavaC
