@@ -1,0 +1,543 @@
+import java.util.ArrayList;
+import java_cup.runtime.Symbol;
+import syntaxtree.*;
+
+/* Preliminaries to use the scanner.  */
+scan with {: return lexer.next_token(); :};
+
+parser code {: 
+  MiniJavaLexer lexer;
+
+  public MiniJavaParser( MiniJavaLexer lex) {
+      super(lex);
+      lexer = lex;
+  }
+
+  public void report_error(String message, Object info) {
+    
+    System.out.print(message);
+    
+    if ( !(info instanceof Symbol) ) return;
+    Symbol symbol = (Symbol) info;
+    
+    if ( symbol.left < 0 || symbol.right < 0 ) return;
+    System.err.println(" at line "+symbol.left+", column "+symbol.right);
+}
+
+:}; 
+
+/* Terminals (tokens returned by lexer). */
+terminal PUBLIC, STATIC, VOID, MAIN, STRING;
+terminal CLASS, EXTENDS;
+terminal RETURN, IF, ELSE, WHILE;
+terminal INT, BOOLEAN;
+terminal PRINTLN, LENGTH, TRUE, FALSE, NEW, THIS;
+terminal LPAREN, RPAREN, LBRACKET, RBRACKET, LBRACE, RBRACE;
+terminal COMMA, DOT, SEMICOLON;
+
+terminal TIMES;
+terminal PLUS, MINUS;
+terminal AND, LESSTHAN;
+terminal EQUAL;
+terminal NOT;
+
+terminal Integer INTEGER;
+terminal String ID;
+  
+non terminal Program program;
+non terminal MainClass main_class;
+non terminal ClassDeclList class_list;
+non terminal ClassDecl class_decl;
+non terminal VarDeclList var_decl_list;
+non terminal VarDecl var_decl;
+non terminal MethodDeclList method_decl_list;
+non terminal MethodDecl method_decl;
+non terminal FormalList formal_list;
+non terminal FormalList formal_rest_list;
+non terminal Formal formal_rest;
+non terminal StatementList statement_list;
+non terminal Statement statement;
+non terminal ExpList expr_list;
+non terminal Exp expr_rest;
+non terminal ExpList expr_rest_list;
+non terminal Exp expr;
+
+precedence right EQUAL;
+precedence left AND;
+precedence right NOT;
+precedence left LESSTHAN;
+precedence left PLUS, MINUS;
+precedence left TIMES;
+precedence left LBRACKET, RBRACKET;
+precedence left DOT;
+
+start with program;
+
+program ::= main_class:main class_list:l
+	{:
+		Program result  = new Program(main, l);
+		RESULT = result;
+	:}
+	; 
+
+main_class ::= CLASS ID:id LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ID:arg RPAREN LBRACE statement:s RBRACE RBRACE
+	{: 
+		MainClass result  = new MainClass(new Identifier(id), new Identifier(arg), s);
+		RESULT = result;
+	:}
+	;
+
+class_list ::= class_list:l class_decl:c
+	{: 
+		ClassDeclList temp;
+		if(l == null) {
+			temp = new ClassDeclList();
+		}
+		else {
+			temp = l;
+		}
+		temp.addElement(c);
+		RESULT = temp;
+	:}
+	|
+	{:
+		ClassDeclList result  = new ClassDeclList();
+		RESULT = result;
+	:}
+	;
+
+class_decl ::= CLASS ID:name LBRACE var_decl_list:vars method_decl_list:methods RBRACE
+	{:
+		ClassDeclSimple result  = new ClassDeclSimple(new Identifier(name), vars, methods);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	CLASS ID:name EXTENDS ID:sup LBRACE var_decl_list:vars method_decl_list:methods RBRACE
+	{:
+		ClassDeclExtends result  = new ClassDeclExtends(new Identifier(name), new Identifier(sup), vars, methods);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	;
+
+var_decl_list ::= var_decl_list:l var_decl:v
+	{:
+		VarDeclList temp;
+		if(l == null) {
+			temp = new VarDeclList();
+		}
+		else {
+			temp = l;
+		}
+		temp.addElement(v);
+		RESULT = temp;
+	:}
+	|
+	{:
+		VarDeclList result  = new VarDeclList();
+		RESULT = result;
+	:}
+	;
+
+var_decl ::= INT LBRACKET RBRACKET ID:name SEMICOLON
+	{:
+		VarDecl result  = new VarDecl(new IntArrayType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	BOOLEAN ID:name SEMICOLON
+	{:
+		VarDecl result  = new VarDecl(new BooleanType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	INT ID:name SEMICOLON
+	{:
+		VarDecl result  = new VarDecl(new IntegerType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	ID:type ID:name SEMICOLON
+	{:
+		VarDecl result  = new VarDecl(new IdentifierType(type), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	;
+
+method_decl_list ::= method_decl_list:l method_decl:m
+	{:
+		MethodDeclList temp;
+		if(l == null) {
+			temp = new MethodDeclList();
+		}
+		else {
+			temp = l;
+		}
+		temp.addElement(m);
+		RESULT = temp;
+	:}
+	|
+	{:
+		MethodDeclList result  = new MethodDeclList();
+		RESULT = result;
+	:}
+	;
+
+method_decl ::= PUBLIC INT LBRACKET RBRACKET ID:name LPAREN formal_list:f RPAREN LBRACE var_decl_list:v statement_list:s RETURN expr:e SEMICOLON RBRACE
+	{:
+		MethodDecl result  = new MethodDecl(new IntArrayType(), new Identifier(name), f, v, s, e);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	PUBLIC BOOLEAN ID:name LPAREN formal_list:f RPAREN LBRACE var_decl_list:v statement_list:s RETURN expr:e SEMICOLON RBRACE
+	{:
+		MethodDecl result  = new MethodDecl(new BooleanType(), new Identifier(name), f, v, s, e);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	PUBLIC INT ID:name LPAREN formal_list:f RPAREN LBRACE var_decl_list:v statement_list:s RETURN expr:e SEMICOLON RBRACE
+	{:
+		MethodDecl result  = new MethodDecl(new IntegerType(), new Identifier(name), f, v, s, e);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	PUBLIC ID:type ID:name LPAREN formal_list:f RPAREN LBRACE var_decl_list:v statement_list:s RETURN expr:e SEMICOLON RBRACE
+	{:
+		MethodDecl result  = new MethodDecl(new IdentifierType(type), new Identifier(name), f, v, s, e);
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	;
+
+formal_list ::= INT LBRACKET RBRACKET ID:name formal_rest_list:l
+	{:
+		Formal f = new Formal(new IntArrayType(), new Identifier(name));
+		f.i.setPosition(nameleft, nameright);
+		FormalList temp = new FormalList();
+		temp.addElement(f);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++) {
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	BOOLEAN ID:name formal_rest_list:l
+	{:
+		Formal f = new Formal(new BooleanType(), new Identifier(name));
+		f.i.setPosition(nameleft, nameright);
+		FormalList temp = new FormalList();
+		temp.addElement(f);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++) {
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	INT ID:name formal_rest_list:l
+	{:
+		Formal f = new Formal(new IntegerType(), new Identifier(name));
+		f.i.setPosition(nameleft, nameright);
+		FormalList temp = new FormalList();
+		temp.addElement(f);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++) {
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	ID:type ID:name formal_rest_list:l
+	{:
+		Formal f = new Formal(new IdentifierType(type), new Identifier(name));
+		f.i.setPosition(nameleft, nameright);
+		FormalList temp = new FormalList();
+		temp.addElement(f);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++) {
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	{:
+		FormalList result = new FormalList();
+		RESULT = result;
+	:}
+	;
+
+formal_rest_list ::= formal_rest_list:l formal_rest:f
+	{:
+		FormalList temp;
+		if(l == null) {
+			temp = new FormalList();
+			
+		}
+		else {
+			temp = l;	
+		}
+		temp.addElement(f);
+		RESULT = temp;
+	:}
+	|
+	{:
+		FormalList result  = new FormalList();
+		RESULT = result;
+	:}
+	;
+
+formal_rest ::= COMMA INT LBRACKET RBRACKET ID:name
+	{:
+		Formal result  = new Formal(new IntArrayType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	COMMA BOOLEAN ID:name
+	{:
+		Formal result  = new Formal(new BooleanType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	COMMA INT ID:name
+	{:
+		Formal result  = new Formal(new IntegerType(), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	COMMA ID:type ID:name
+	{:
+		Formal result  = new Formal(new IdentifierType(type), new Identifier(name));
+		result.i.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	;
+
+statement_list ::= statement:s statement_list:l 
+	{: 
+		StatementList temp = new StatementList();
+		temp.addElement(s);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++) {
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	{:
+		StatementList result  = new StatementList();
+		RESULT = result;
+	:}
+	;
+
+statement ::= LBRACE statement_list:l RBRACE
+	{:
+		Block result  = new Block(l);
+		RESULT = result;
+	:}
+	|
+	IF LPAREN expr:e RPAREN statement:if_part ELSE statement:else_part
+	{:
+		If result  = new If(e, if_part, else_part);
+		RESULT = result;
+	:}
+	|
+	WHILE LPAREN expr:e RPAREN statement:body
+	{:
+		While result  = new While(e, body);
+		RESULT = result;
+	:}
+	|
+	PRINTLN:p LPAREN expr:e RPAREN SEMICOLON
+	{:
+		Print result  = new Print(e);
+		result.setPosition(pleft, pright);
+		RESULT = result;
+	:}
+	|
+	ID:rhs EQUAL:eq expr:lhs SEMICOLON
+	{:
+		Assign result  = new Assign(new Identifier(rhs), lhs);
+		result.setPosition(eqleft,eqright);
+		RESULT = result;
+	:}
+	|
+	ID:array LBRACKET expr:index RBRACKET EQUAL:eq expr:lhs SEMICOLON
+	{:
+		ArrayAssign result  = new ArrayAssign(new Identifier(array), index, lhs);
+		result.setPosition(eqleft,eqright);
+		RESULT = result;
+	:}
+	;
+
+expr ::=expr:l PLUS:op expr:r
+	{: 
+		Plus result  = new Plus(l, r);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l MINUS:op expr:r
+	{:  
+		Minus result  = new Minus(l, r);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l TIMES:op expr:r
+	{: 
+		Times result  = new Times(l, r);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l AND:op expr:r
+	{:  
+		And result  = new And(l, r);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l LESSTHAN:op expr:r
+	{:  
+		LessThan result  = new LessThan(l, r);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l LBRACKET:op expr:index RBRACKET
+	{: 
+		ArrayLookup result  = new ArrayLookup(l, index);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l DOT:op LENGTH
+	{:
+		ArrayLength result  = new ArrayLength(l);
+		result.setPosition(opleft, opright);
+		RESULT = result;
+	:}
+	|
+	expr:l DOT ID:func LPAREN expr_list:list RPAREN
+	{:
+		Call result  = new Call(l, new Identifier(func), list);
+		result.i.setPosition(funcleft, funcright);
+		RESULT = result;
+	:}
+	|
+	INTEGER:i
+	{:  
+		IntegerLiteral result  = new IntegerLiteral(i.intValue());
+		RESULT = result;
+	:}
+	|
+	TRUE:t
+	{: 
+		True result  = new True();
+		result.setPosition(tleft, tright);
+		RESULT = result;
+	:}
+	|
+	FALSE:f
+	{: 
+		False result  = new False();
+		result.setPosition(fleft, fright);
+		RESULT = result;
+	:}
+	|
+	ID:name
+	{:
+		IdentifierExp result  = new IdentifierExp(name);
+		result.setPosition(nameleft, nameright);
+		RESULT = result;
+	:}
+	|
+	THIS:t
+	{: 
+		This result  = new This();
+		result.setPosition(tleft, tright);
+		RESULT = result;
+	:}
+	|
+	NEW INT LBRACKET expr:size RBRACKET
+	{: 
+		NewArray result  = new NewArray(size);
+		RESULT = result;
+	:}
+	| 
+	NEW ID:type LPAREN RPAREN
+	{: 
+		NewObject result  = new NewObject(new Identifier(type));
+		result.i.setPosition(typeleft, typeright);
+		RESULT = result;
+	:}
+	|
+	NOT expr:r
+	{: 
+		Not result = new Not(r);
+		RESULT = result;
+	:}
+	|
+	LPAREN expr:e RPAREN
+	{:  
+		RESULT = e;
+	:}
+	;
+
+expr_list ::= expr:e expr_rest_list:l
+	{:
+		ExpList temp = new ExpList();
+		temp.addElement(e);
+		if(l != null) {
+			for(int i=0; i<l.size(); i++)
+			{
+				temp.addElement(l.elementAt(i));
+			}
+		}
+		RESULT = temp;
+	:}
+	|
+	{:
+		ExpList result  = new ExpList();
+		RESULT = result;
+	:}
+	;
+
+expr_rest_list ::= expr_rest_list:l expr_rest:e
+	{:
+		ExpList temp;
+		if(l == null) {
+			temp = new ExpList();
+			
+		}
+		else {
+			temp = l;	
+		}
+		temp.addElement(e);
+		RESULT = temp;
+	:}
+	|
+	;
+
+expr_rest ::= COMMA expr:e
+	{:
+		RESULT = e;
+	:}
+	;
