@@ -5,7 +5,7 @@ import visitor.symbol.*;
 
 public class LivenessData {
     private static final boolean DEBUG_LIVENESS = true;
-    private static final String OUTFRMT = "%-20s%-20s%-20s\n";
+    private static final String OUTFRMT = "%-15s%-15s%-15s\n";
     ArrayList<HashSet<Symbol>> use;
     ArrayList<HashSet<Symbol>> def;
     ArrayList<HashSet<Symbol>> in;

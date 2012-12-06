@@ -47,6 +47,7 @@ public class HW3 {
 
         System.out.println( "\nInterference Graph:" );
         System.out.println( ifg );
+        ifg.color( 3 );
     }
 
 }
