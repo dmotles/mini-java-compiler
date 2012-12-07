@@ -5,3 +5,4 @@ sym.java
 *.old
 *.presuper
 tags
+*.jar
