@@ -16,5 +16,9 @@ public class ParameterQuadruple extends Quadruple
     public boolean isDef() {
         return false;
     }
-    //TODO: Is this a copy too? I'm not sure yet.
+
+
+    public int quadType() {
+        return Quadruple.PARAMETERQUADRUPLE;
+    }
 }

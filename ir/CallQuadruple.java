@@ -33,4 +33,7 @@ public class CallQuadruple extends Quadruple
             + ", "
             + parameters;
     }
+    public int quadType() {
+        return Quadruple.CALLQUADRUPLE;
+    }
 }

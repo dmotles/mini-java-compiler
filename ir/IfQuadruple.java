@@ -18,4 +18,7 @@ public class IfQuadruple extends Quadruple
     public boolean isDef() {
         return false;
     }
+    public int quadType() {
+        return Quadruple.IFQUADRUPLE;
+    }
 }

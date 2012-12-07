@@ -14,4 +14,8 @@ public class ArrayAssignmentQuadruple extends Quadruple
     {
         return result.getName() + "[ " + argument2.getName() + " ] := " + argument2.getName();
     }
+
+    public int quadType() {
+        return Quadruple.ARRAYASSIGNMENTQUADRUPLE;
+    }
 }

@@ -18,4 +18,7 @@ public class CopyQuadruple extends Quadruple
     {
         return result.getName() + " := " + argument1.getName();
     }
+    public int quadType() {
+        return Quadruple.COPYQUADRUPLE;
+    }
 }

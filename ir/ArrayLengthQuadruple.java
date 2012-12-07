@@ -14,4 +14,7 @@ public class ArrayLengthQuadruple extends Quadruple
     {
         return result.getName() + " := length " + argument1.getName();
     }
+    public int quadType() {
+        return Quadruple.ARRAYLENGTHQUADRUPLE;
+    }
 }

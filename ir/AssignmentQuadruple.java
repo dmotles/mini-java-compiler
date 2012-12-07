@@ -28,4 +28,7 @@ public class AssignmentQuadruple extends Quadruple
     {
         return result.getName() + " := " + argument1.getName() + " " + operators[operator] + " " + argument2.getName();
     }
+    public int quadType() {
+        return Quadruple.ASSIGNMENTQUADRUPLE;
+    }
 }

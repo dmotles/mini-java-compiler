@@ -14,4 +14,7 @@ public class NewObjectQuadruple extends Quadruple
     {
         return result.getName() + " := new " + argument1.getType() + "()";
     }
+    public int quadType() {
+        return Quadruple.NEWOBJECTQUADRUPLE;
+    }
 }

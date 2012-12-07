@@ -14,4 +14,7 @@ public class ArrayLookupQuadruple extends Quadruple
     {
         return result.getName() + " := " + argument1.getName() + "[ " + argument2.getName() + " ]";
     }
+    public int quadType() {
+        return Quadruple.ARRAYLOOKUPQUADRUPLE;
+    }
 }

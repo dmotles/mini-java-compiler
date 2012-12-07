@@ -14,4 +14,7 @@ public class NewArrayQuadruple extends Quadruple
     {
         return result.getName() + " := new int [" + argument1.getName() + "]";
     }
+    public int quadType() {
+        return Quadruple.NEWARRAYQUADRUPLE;
+    }
 }

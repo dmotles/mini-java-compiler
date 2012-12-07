@@ -18,4 +18,7 @@ public class GotoQuadruple extends Quadruple
     public boolean isDef() {
         return false;
     }
+    public int quadType() {
+        return Quadruple.GOTOQUADRUPLE;
+    }
 }
