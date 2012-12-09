@@ -1,0 +1,7 @@
+package mips.code;
+import mips.register.*;
+public class AND extends RInstruction {
+    public String name() {
+        return "and";
+    }
+}
