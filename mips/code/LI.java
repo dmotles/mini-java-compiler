@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register.*;
+import mips.allocator.*;
 public class LI extends IInstruction {
     public String name() {
         return "li";

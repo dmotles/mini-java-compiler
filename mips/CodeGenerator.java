@@ -1,33 +1,30 @@
 package mips;
-import mips.register.*;
+import mips.allocator.*;
 import mips.code.*;
 import ir.*;
 import visitor.symbol.*;
 import java.util.*;
+import syntaxtree.*;
 
 public class CodeGenerator {
-    HashMap<String, ArrayList<Quadruple>> methodIR;
-    Allocator regAllocator;
-    LabelMapping labels;
+    IR ir;
+    SymbolTable symbolTable;
+    Allocator allocator;
 
-    public CodeGenerator( HashMap<String, ArrayList<Quadruple>> methodIR ) {
-        this.methodIR = methodIR;
-        regAllocator = new Allocator();
-        labels = new LabelMapping();
+    public CodeGenerator( IR ir, SymbolTable st ) {
+        this.ir = ir;
+        symbolTable = st;
+        allocator = new Allocator( st );
     }
 
-    ArrayList<Instruction> generate() {
-        ArrayList<Instruction> finishedCode = new ArrayList<Instruction>();
-        for( String methodname : methodIR.keySet() ) {
-            ArrayList<Quadruple> IR = methodIR.get( methodname );
-            labels.add( methodName );
-            finishedCode.add( labels.get(methodname) );
-            Allocator.allocateRegisters( IR );
-            for( Quadruple quad : IR ) {
-                finishedCode.addAll( processQuad( quad ) );
+    public void generate() {
+        for( Identifier c : ir.classes() ) {
+            HashMap<Identifier,ArrayList<Quadruple>> methodIRMap = ir.getClass(c);
+            for( Identifier m: methodIRMap.keySet() ) {
+                ArrayList<Quadruple> methodIR = methodIRMap.get(m);
+                allocator.allocate( c, m, methodIR );
             }
         }
-        return finishedCode;
     }
 
     private ArrayList<Instruction> processQuad( Quadruple q ) {
@@ -45,7 +42,7 @@ public class CodeGenerator {
                 if( firstArg instanceof Constant ) {
                     LI li = new LI();
                     li.setImmediate( firstArg );
-                    li.setRS( regAllocator.getRegister( result );
+                    li.setRS( allocator.getRegister( result ));
                     ilist.add(li);
                 }
                 break;

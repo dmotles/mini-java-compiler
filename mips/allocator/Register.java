@@ -1,8 +1,8 @@
-package mips.register;
+package mips.allocator;
 
 public enum Register {
-    zero(0),
-    at(1),
+    zero(0, true),
+    at(1, true),
     v0(2),
     v1(3),
     a0(4),
@@ -27,19 +27,26 @@ public enum Register {
     s7(23),
     t8(24),
     t9(25),
-    k0(26),
-    k1(27),
-    gp(28),
-    sp(29),
-    fp(30),
-    ra(31);
+    k0(26, true),
+    k1(27, true),
+    gp(28, true),
+    sp(29, true),
+    fp(30, true),
+    ra(31, true);
 
 
 
 
     public int num;
+    public boolean reserved;
 
     Register( int num ) {
         this.num = num;
+        this.reserved = false;
+    }
+
+    Register( int num , boolean reserved ) {
+        this.num = num;
+        this.reserved = reserved;
     }
 }

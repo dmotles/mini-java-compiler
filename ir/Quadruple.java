@@ -22,6 +22,10 @@ public abstract class Quadruple
     public final static int RETURNQUADRUPLE = 11;
     public final static int UNARYASSIGNMENTQUADRUPLE = 12;
 
+    public HashSet<Quadruple> succ = new HashSet<Quadruple>();
+    public HashSet<Quadruple> pred = new HashSet<Quadruple>();
+    public int ID = -1;
+
     public Symbol getFirstArgument()
     {
         return argument1;

@@ -1,7 +1,7 @@
-package ir;
-
+package mips.allocator;
 import java.util.*;
 import visitor.symbol.*;
+import ir.*;
 
 public class LivenessData {
     private static final boolean DEBUG_LIVENESS = true;
@@ -11,74 +11,73 @@ public class LivenessData {
     ArrayList<HashSet<Symbol>> in;
     ArrayList<HashSet<Symbol>> out;
 
-    public LivenessData( ArrayList<CFGNode> cfg ) {
-        use = new ArrayList<HashSet<Symbol>>( cfg.size() );
-        def = new ArrayList<HashSet<Symbol>>( cfg.size() );
-        in = new ArrayList<HashSet<Symbol>>( cfg.size() );
-        out = new ArrayList<HashSet<Symbol>>( cfg.size() );
+    public LivenessData( ArrayList<Quadruple> ir ) {
+        use = new ArrayList<HashSet<Symbol>>( ir.size() );
+        def = new ArrayList<HashSet<Symbol>>( ir.size() );
+        in = new ArrayList<HashSet<Symbol>>( ir.size() );
+        out = new ArrayList<HashSet<Symbol>>( ir.size() );
 
-        for( CFGNode c : cfg ) {
-            Symbol res = c.quad.getResult();
-            Symbol arg1 = c.quad.getFirstArgument();
-            Symbol arg2 = c.quad.getSecondArgument();
+        for( int i = 0 ; i < ir.size(); i++ ) {
+            Quadruple q = ir.get(i);
+            Symbol res = q.getResult();
+            Symbol arg1 = q.getFirstArgument();
+            Symbol arg2 = q.getSecondArgument();
             HashSet<Symbol> uses = new HashSet<Symbol>();
             HashSet<Symbol> defs = new HashSet<Symbol>();
-            if( res != null && res instanceof VariableSymbol ) {
+            if( res != null && res instanceof VariableSymbol || res instanceof MemorySymbol ) {
                 defs.add( res );
             }
-            if( arg1 != null && arg1 instanceof VariableSymbol ) {
+            if( arg1 != null && arg1 instanceof VariableSymbol || res instanceof MemorySymbol ) {
                 uses.add( arg1 );
             }
-            if( arg2 != null && arg2 instanceof VariableSymbol) {
-                uses.add(arg2);
+            if( arg2 != null && arg2 instanceof VariableSymbol || res instanceof MemorySymbol ) {
+                uses.add( arg2);
             }
             use.add( uses );
             def.add( defs );
         }
-        calculateLiveness( cfg );
+        calculateLiveness( ir );
     }
 
-    public void calculateLiveness( ArrayList<CFGNode> cfg ) {
+    public void calculateLiveness( ArrayList<Quadruple> ir ) {
         in.clear();
         out.clear();
-        for( int i = 0; i < cfg.size(); i++ ) {
+        for( int i = 0; i < ir.size(); i++ ) {
             in.add( new HashSet<Symbol>() );
             out.add( new HashSet<Symbol>() );
         }
 
-        BitSet change = new BitSet( cfg.size() );
-        change.set( 0, cfg.size() );
+        BitSet change = new BitSet( ir.size() );
+        change.set( 0, ir.size() );
 
         int iterationCount = 1;
         while( ! change.isEmpty() ) {
-            for( int i = cfg.size()-1; i >= 0; i-- ) {
-                CFGNode c = cfg.get( i );
-                int n = c.id;
-                HashSet<Symbol> inP = new HashSet<Symbol>( in.get(n) );
-                HashSet<Symbol> outP = new HashSet<Symbol>( out.get(n) );
+            for( int i = ir.size()-1; i >= 0; i-- ) {
+                Quadruple q = ir.get( i );
+                HashSet<Symbol> inP = new HashSet<Symbol>( in.get(i) );
+                HashSet<Symbol> outP = new HashSet<Symbol>( out.get(i) );
 
                 //out[n] - def[n]
-                out.get(n).removeAll( def.get(n) );
+                out.get(i).removeAll( def.get(i) );
 
                 // in[n] = use[n]
-                in.get(n).clear();
-                in.get(n).addAll( use.get(n) );
+                in.get(i).clear();
+                in.get(i).addAll( use.get(i) );
 
                 // in[n] U (out[n] - def[n])
-                in.get(n).addAll( out.get(n) );
+                in.get(i).addAll( out.get(i) );
 
-                out.get(n).clear();
+                out.get(i).clear();
 
-                for( CFGNode succ : c.next ) {
-                    int s = succ.id;
-                    out.get(n).addAll( in.get(s) );
+                for( Quadruple s : q.succ ) {
+                    out.get(i).addAll( in.get(s.ID) );
                 }
 
                 // check if there was a change on this iteration
-                if( inP.equals( in.get(n) ) && outP.equals( out.get(n) ) ) {
-                    change.clear( n );
+                if( inP.equals( in.get(i) ) && outP.equals( out.get(i) ) ) {
+                    change.clear( i );
                 } else {
-                    change.set( n );
+                    change.set( i );
                 }
             }
 
@@ -125,7 +124,7 @@ public class LivenessData {
     }
 
 
-    private static String setToString( HashSet<Symbol> h ) {
+    private static String setToString( HashSet<? extends Symbol> h ) {
         StringBuilder sb = new StringBuilder();
         for( Symbol s : h ) {
             if( sb.length() > 0 )

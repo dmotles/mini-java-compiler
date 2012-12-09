@@ -1,30 +1,53 @@
-package ir;
+package mips.allocator;
 
 import java.util.*;
 import visitor.symbol.*;
+import ir.*;
 public class InterferenceGraph {
     HashMap<Symbol, Node> graphNodes;
     private static final boolean DEBUG_COLOR = true;
 
-    public InterferenceGraph( LivenessData ld ) {
+    public InterferenceGraph( MethodSymbol meth, LivenessData ld, ArrayList<Quadruple> ir ) {
         graphNodes = new HashMap<Symbol,Node>();
-        for( int i = 0; i < ld.in.size(); i++ ) {
-            HashSet<Symbol> inset = ld.in.get(i);
-            HashSet<Symbol> outset = ld.out.get(i);
-            for( Symbol livein : inset ) {
-                if( outset.contains(livein) ) {
+        for( int i = 0; i < ir.size(); i++ ) {
+            Quadruple q = ir.get( i );
+            if( q.isDef() ) {
+                Symbol def = q.getResult();
+                HashSet<Symbol> outset = ld.out.get(i);
                 for( Symbol liveout : outset ) {
-                    if( livein != liveout ) {
-                        Node inNode = getNode( livein );
-                        Node outNode = getNode( liveout );
-                        inNode.adjacent.add( outNode );
-                        outNode.adjacent.add( inNode );
+                    if( def != liveout ) {
+                        if( !q.isCopy() || q.getFirstArgument() != liveout ) {
+                            Node defnode = getNode( (Symbol)def );
+                            Node outnode = getNode( liveout );
+                            defnode.adjacent.add( outnode );
+                            outnode.adjacent.add( defnode );
+                        }
                     }
-                }
-
                 }
             }
         }
+        ArrayList<VariableSymbol> params = meth.getParameters();
+        switch( params.size() ) {
+            default:
+            case 4:
+                preColorSymbol(params.get(3),Register.a3);
+                //fall-through
+            case 3:
+                preColorSymbol(params.get(2),Register.a2);
+                //fall-through
+            case 2:
+                preColorSymbol(params.get(1),Register.a1);
+                //fall-through
+            case 1:
+                preColorSymbol(params.get(0),Register.a0);
+                //fall-through
+            case 0:
+                break;
+        }
+    }
+
+    public void preColorSymbol( Symbol s, Register r ) {
+        getNode(s).preColor(r);
     }
 
     public String toString() {
@@ -51,19 +74,24 @@ public class InterferenceGraph {
         return n;
     }
 
-    public void color( int k ) {
+    public void color( Collection<Register> allowedRegisters ) {
         Stack<Node> stack = new Stack<Node>();
         HashSet<Node> graph = new HashSet<Node>( graphNodes.values() );
         int i = 1;
-        while( !graph.isEmpty() ) {
+        boolean removedSomething = true;
+        while( removedSomething ) {
+            removedSomething = false;
             // find node < degree
             for( Node n : graph ){
-                if( n.degree() < k ) {
-                    graph.remove( n );
-                    n.remove();
-                    //add to stack
-                    stack.push( n );
-                    break;
+                if( n.degree() < allowedRegisters.size() ) {
+                    if( ! n.precolored ) {
+                        graph.remove( n );
+                        n.remove();
+                        //add to stack
+                        stack.push( n );
+                        removedSomething = true;
+                        break;
+                    }
                 }
             }
 
@@ -81,7 +109,7 @@ public class InterferenceGraph {
             Node n = stack.pop();
             n.add();
             graph.add( n );
-            n.color( k );
+            n.color( allowedRegisters );
             if( DEBUG_COLOR ) {
                 System.err.println( "\n== ITERATION: " + i++ );
                 System.err.println( "Stack:" );
@@ -96,12 +124,16 @@ public class InterferenceGraph {
     private class Node {
         public Symbol symbol;
         public HashSet<Node> adjacent;
-        public int color;
+        public Register register;
+        public boolean precolored;
+        public boolean spillCandidate;
 
         Node( Symbol s ) {
             symbol = s;
             adjacent = new HashSet<Node>();
-            color = -1;
+            register = null;
+            spillCandidate = false;
+            precolored = false;
         }
 
         public int degree() {
@@ -120,28 +152,38 @@ public class InterferenceGraph {
             }
         }
 
-        public boolean color( int k ) {
-            for( int i = 0; i < k; i++ ) {
-                boolean available = true;
-                for( Node n : adjacent ) {
-                    if( n.color == i ) {
-                        available = false;
+        public void preColor( Register r ){
+            register = r;
+            precolored = true;
+        }
+
+        public boolean color( Collection<Register> allowedRegisters ) {
+            if( !precolored ) {
+                for( Register r : allowedRegisters ) {
+                    boolean available = true;
+                    for( Node n : adjacent ) {
+                        if( n.register == r) {
+                            available = false;
+                            break;
+                        }
+                    }
+                    if( available ) {
+                        register = r;
                         break;
                     }
                 }
-                if( available ) {
-                    color = i;
-                    break;
-                }
+                if( register == null ) return true;
+                return false;
             }
-            if( color > -1 ) return true;
-            return false;
+            return true;
         }
 
         public String toString() {
-            return String.format( "%s Color: %d Degree: %d Adj:%s",
+            String reg = (register==null)?"none":register.toString();
+
+            return String.format( "%s Register: %s Degree: %d Adj:%s",
                     symbol.getName(),
-                    color,
+                    reg,
                     degree(),
                     adjToString()
                     );
