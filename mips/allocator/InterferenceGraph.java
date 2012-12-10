@@ -11,14 +11,13 @@ public class InterferenceGraph {
         graphNodes = new HashMap<Symbol,Node>();
         for( int i = 0; i < ir.size(); i++ ) {
             Quadruple q = ir.get( i );
-            if( q.isDef() ) {
-                Symbol def = q.getResult();
+            for( Symbol def : ld.def.get(i) ) {
+                Node defnode = getNode( def );
                 HashSet<Symbol> outset = ld.out.get(i);
                 for( Symbol liveout : outset ) {
+                    Node outnode = getNode( liveout );
                     if( def != liveout ) {
                         if( !q.isCopy() || q.getFirstArgument() != liveout ) {
-                            Node defnode = getNode( (Symbol)def );
-                            Node outnode = getNode( liveout );
                             defnode.adjacent.add( outnode );
                             outnode.adjacent.add( defnode );
                         }
@@ -102,6 +101,18 @@ public class InterferenceGraph {
                 System.err.println( "Graph:" );
                 System.err.println( nodeCollectionToString(graph));
             }
+
+            if( !removedSomething && !graph.isEmpty() ) {
+                boolean crash = false;
+                for( Node n : graph ) {
+                    if( !n.precolored )
+                        crash=true;
+                }
+                if( crash ) {
+                    System.err.println("Unable to simplify further. Coalescing, freezing, and spilling are not implemented in this version.");
+                    System.exit(99);
+                }
+            }
         }
         if(DEBUG_COLOR) System.err.println("\nRe-Adding Nodes!\n");
         // add each node 1 by 1 back to graph and color
@@ -109,13 +120,18 @@ public class InterferenceGraph {
             Node n = stack.pop();
             n.add();
             graph.add( n );
-            n.color( allowedRegisters );
+            boolean colorsuccess = n.color( allowedRegisters );
             if( DEBUG_COLOR ) {
                 System.err.println( "\n== ITERATION: " + i++ );
                 System.err.println( "Stack:" );
                 System.err.println( nodeCollectionToString(stack));
                 System.err.println( "Graph:" );
                 System.err.println( nodeCollectionToString(graph));
+            }
+
+            if( colorsuccess == false ) {
+                System.err.println("I ran out of registers to color with... exiting.");
+                System.exit(101);
             }
         }
 
@@ -172,8 +188,8 @@ public class InterferenceGraph {
                         break;
                     }
                 }
-                if( register == null ) return true;
-                return false;
+                if( register == null ) return false;
+                return true;
             }
             return true;
         }

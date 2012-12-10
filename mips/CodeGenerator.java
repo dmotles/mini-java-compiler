@@ -26,7 +26,7 @@ public class CodeGenerator {
             }
         }
     }
-
+/*
     private ArrayList<Instruction> processQuad( Quadruple q ) {
         ArrayList<Instruction> ilist = null;
         switch( q.quadType() ) {
@@ -156,4 +156,5 @@ public class CodeGenerator {
         }
         return ilist;
     }
+    */
 }
