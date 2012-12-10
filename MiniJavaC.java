@@ -8,6 +8,7 @@ import mips.*;
 import ir.*;
 
 public class MiniJavaC {
+    public static final boolean DEBUG = false;
     public static void main(String[] args) {
         if(args.length != 1) {
             System.err.println("ERROR: Invalid number of command line arguments.");
@@ -38,7 +39,7 @@ public class MiniJavaC {
             System.out.println("****** IR Generation ************");
             irVisitor.visit(p);
 
-            table.dump();
+            if(DEBUG) table.dump();
             IR irmap = irVisitor.getIR();
             CodeGenerator cg = new CodeGenerator( irmap, table );
             cg.generate();

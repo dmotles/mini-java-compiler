@@ -19,12 +19,12 @@ public class CallQuadruple extends Quadruple
         isStatic = b;
     }
 
+
     public String toString ()
     {
         int parameters = ((MethodSymbol)argument1).getParameters().size();
-        if(!isStatic) {
-            //Add in the parameter for this
-            parameters ++;
+        if(isStatic) {
+            parameters--;
         }
 
         return ((result == null) ? "" : result.getName() + " := " )

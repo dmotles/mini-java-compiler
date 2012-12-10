@@ -3,12 +3,12 @@ package mips.allocator;
 public enum Register {
     zero(0, true),
     at(1, true),
-    v0(2),
-    v1(3),
-    a0(4),
-    a1(5),
-    a2(6),
-    a3(7),
+    v0(2,true),
+    v1(3,true),
+    a0(4,true),
+    a1(5,true),
+    a2(6,true),
+    a3(7,true),
     t0(8),
     t1(9),
     t2(10),
@@ -32,13 +32,16 @@ public enum Register {
     gp(28, true),
     sp(29, true),
     fp(30, true),
-    ra(31, true);
-
+    ra(31, true),
+    MEM_STACK_FRAME(99,true),
+    MEM_CLASS(101,true),
+    MEM_SPILL(99,true);
 
 
 
     public int num;
     public boolean reserved;
+    public ColorAllocation allocation;
 
     Register( int num ) {
         this.num = num;
@@ -49,4 +52,5 @@ public enum Register {
         this.num = num;
         this.reserved = reserved;
     }
+
 }

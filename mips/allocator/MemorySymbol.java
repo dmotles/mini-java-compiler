@@ -3,15 +3,27 @@ import visitor.symbol.*;
 import syntaxtree.*;
 
 public class MemorySymbol extends Symbol {
-    VariableSymbol v;
-    public MemorySymbol( VariableSymbol v ) {
-        this.v = v;
-        name = new Identifier( "mem[" + v.getName().toString() + "]" );
+    Symbol v;
+    int offset;
+    Register r;
+    public MemorySymbol( Register r, Symbol old, Identifier i, int offset ) {
+        this.r = r;
+        this.v = old;
+        name = i;
         type = v.getType();
+        this.offset = offset;
     }
 
-    public VariableSymbol getVarSymbol() {
+    public Symbol getSymbol() {
         return v;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public Register getRegister() {
+        return r;
     }
 
     public String toString() {

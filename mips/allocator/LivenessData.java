@@ -6,10 +6,10 @@ import ir.*;
 public class LivenessData {
     private static final boolean DEBUG_LIVENESS = true;
     private static final String OUTFRMT = "%-15s%-15s%-15s\n";
-    ArrayList<HashSet<Symbol>> use;
-    ArrayList<HashSet<Symbol>> def;
-    ArrayList<HashSet<Symbol>> in;
-    ArrayList<HashSet<Symbol>> out;
+    public ArrayList<HashSet<Symbol>> use;
+    public ArrayList<HashSet<Symbol>> def;
+    public ArrayList<HashSet<Symbol>> in;
+    public ArrayList<HashSet<Symbol>> out;
 
     public LivenessData( ArrayList<Quadruple> ir ) {
         use = new ArrayList<HashSet<Symbol>>( ir.size() );

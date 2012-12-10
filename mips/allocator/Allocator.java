@@ -6,28 +6,25 @@ import mips.code.*;
 import syntaxtree.*;
 
 public class Allocator {
-    private static final Register [] registers = Register.values();
-    private static final ArrayList<Register> gpRegList;
+    private static final ArrayList<ColorAllocation> registers;
+    private static final ArrayList<ColorAllocation> generalPurposeRegisters;
     static {
-        gpRegList = new ArrayList<Register>(16);
-        gpRegList.add(Register.t0);
-        gpRegList.add(Register.t1);
-        gpRegList.add(Register.t2);
-        gpRegList.add(Register.t3);
-        gpRegList.add(Register.t4);
-        gpRegList.add(Register.t5);
-        gpRegList.add(Register.t6);
-        gpRegList.add(Register.t7);
-        gpRegList.add(Register.t8);
-        gpRegList.add(Register.t9);
-        gpRegList.add(Register.s0);
-        gpRegList.add(Register.s1);
-        gpRegList.add(Register.s2);
-        gpRegList.add(Register.s3);
-        gpRegList.add(Register.s4);
-        gpRegList.add(Register.s5);
-        gpRegList.add(Register.s6);
-        gpRegList.add(Register.s7);
+        Register [] regs = Register.values();
+        IdentifierType ridt = new IdentifierType("_MIPS_REGISTER_");
+        registers = new ArrayList<ColorAllocation>();
+        generalPurposeRegisters = new ArrayList<ColorAllocation>();
+        for( int i = 0; i < regs.length; i++ ) {
+            ColorAllocation a = new ColorAllocation( regs[i],
+                        new VariableSymbol(
+                            ridt,
+                            new Identifier("$" + regs[i] )
+                            )
+                        );
+            registers.add(a);
+            if( ! regs[i].reserved ) {
+                generalPurposeRegisters.add( a );
+            }
+        }
     }
     private SymbolTable symbolTable;
 //    private HashMap<Symbol,Register> symbolRegMap;
@@ -42,11 +39,6 @@ public class Allocator {
     }
 
 
-    public static Register register( int index ) {
-        return registers[index];
-
-    }
-
 
     public void allocate( Identifier c, Identifier m, ArrayList<Quadruple> ir ) {
         boolean allocationComplete = false;
@@ -56,11 +48,11 @@ public class Allocator {
             setCFGData( ir );
             dumpIR( ir );
             LivenessData ld = new LivenessData( ir );
-            InterferenceGraph ifg = new InterferenceGraph( meth, ld, ir );
-            System.out.println("INTEFERNCE GRAPH:");
-            System.out.println(ifg.toString());
-            ifg.color(gpRegList);
-            allocationComplete = true;
+            InterferenceGraph ifg = new InterferenceGraph( meth, ld, ir, registers );
+            allocationComplete = ifg.assignColors( generalPurposeRegisters );
+            if( ! allocationComplete ) {
+
+            }
         }
     }
 
@@ -102,6 +94,31 @@ public class Allocator {
             }
             for( Quadruple succ : quad.succ ) {
                 succ.pred.add( quad );
+            }
+        }
+    }
+
+    private static void reNumberQuads( ArrayList<Quadruple> ir ) {
+        for( int i = 0; i < ir.size(); i++ ) ir.get(i).ID = i;
+    }
+
+    private static void adjustJumpLabels( ArrayList<Quadruple> ir ) {
+        for( int i = 0 ; i < ir.size(); i++ ) {
+            Quadruple q = ir.get(i);
+            Symbol target = q.getResult();
+            switch( q.quadType() ) {
+                case Quadruple.GOTOQUADRUPLE:
+                case Quadruple.IFQUADRUPLE:
+                    if( target == null ) continue;
+                    for( Quadruple succ : q.succ ) {
+                        if( i < ir.size() - 1 && succ != ir.get(i+1) ) {
+                            //TODO: finish
+
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
