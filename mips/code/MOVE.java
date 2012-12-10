@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register.*;
+import mips.allocator.*;
 public class MOVE extends IInstruction {
     public String name() {
         return "move";

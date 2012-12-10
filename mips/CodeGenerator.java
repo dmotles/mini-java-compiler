@@ -27,7 +27,7 @@ public class CodeGenerator {
         }
     }
 
-    private ArrayList<Instruction> processQuad( Quadruple q ) {
+    /*private ArrayList<Instruction> processQuad( Quadruple q ) {
         ArrayList<Instruction> ilist = null;
         switch( q.quadType() ) {
             case Quadruple.ARRAYASSIGNMENTQUADRUPLE:
@@ -35,62 +35,63 @@ public class CodeGenerator {
             case Quadruple.ARRAYLOOKUPQUADRUPLE:
             case Quadruple.ASSIGNMENTQUADRUPLE:
                 ilist = new ArrayList<Instruction>();
-                Symbol result = q.getResult();
-                Symbol firstArg = q.getFirstArgument();
-                Symbol secondArg = q.getSecondArgument();
-                int op = q.getOperator();
+                AssignmentQuadruple aq = (AssignmentQuadruple)q;
+                Symbol result = aq.getResult();
+                Symbol firstArg = aq.getFirstArgument();
+                Symbol secondArg = aq.getSecondArgument();
+                int op = aq.getOperator();
 
                 if(op == 0)
                 {
                     if( firstArg instanceof Constant)
                     {
                         ADDI addi = new ADDI();
-                        addi.setRT(regAllocator.getRegister(result));
-                        addi.setRS(regAllocator.getRegister(secondArg));
+                        addi.setRT(allocator.getRegister(result));
+                        addi.setRS(allocator.getRegister(secondArg));
                         addi.setImmediate(firstArg);
                         ilist.add(addi);
                     }
                     else
                     {
                         ADD add = new ADD();
-                        add.setRD( regAllocator.getRegister(result) );
-                        add.setRS( regAllocator.getRegister(firstArg));
-                        add.setRT( regAllocator.getRegister(secondArg));
+                        add.setRD( allocator.getRegister(result) );
+                        add.setRS( allocator.getRegister(firstArg));
+                        add.setRT( allocator.getRegister(secondArg));
                         ilist.add(add);
                         break;
                     }
                 }
-                if else(op == 1)
+                else if(op == 1)
                 {
                     SUB sub = new SUB();
-                    sub.setRD(regAllocator.getRegister(result));
-                    sub.setRS(regAllocator.getRegister(firstArg));
-                    sub.setRT(regAllocator.getRegister(secondArg));
+                    sub.setRD(allocator.getRegister(result));
+                    sub.setRS(allocator.getRegister(firstArg));
+                    sub.setRT(allocator.getRegister(secondArg));
                     ilist.add(sub);
                 }
-                if else(op == 2)
+                else if(op == 2)
                 {
                     MULT mult = new MULT();
-                    mult.setRS(regAllocator.getRegister(firstArg));
-                    mult.setRT(regAllocator.getRegister(secondArg));
+                    mult.setRS(allocator.getRegister(firstArg));
+                    mult.setRT(allocator.getRegister(secondArg));
                     ilist.add(mult);
                 }
-                if else(op == 3)
+                else if(op == 3)
                 {
                     if(firstArg instanceof Constant)
                     {
                         SLTI slti = new SLTI();
-                        slti.setRS(regAllocator.getRegister(firstArg));
-                        slti.setImmediate(regAllocator.getRegister(secondArg));
-                        slti.setRT(regAllocator.getRegister(result));
+                        slti.setRS(allocator.getRegister(firstArg));
+                        slti.setImmediate( secondArg );
+                        slti.setRT(allocator.getRegister(result));
                         ilist.add(slti);
                     }
                     else
                     {
                         SLT slt = new SLT();
-                        slt.setRS(regAllocator.getRegister(firstArg));
-                        slt.setRT(regAllocator.getRegister(secondArg));
-                        slt.setRD(regAllocator.getRegister(result));
+                        slt.setRS(allocator.getRegister(firstArg));
+                        slt.setRT(allocator.getRegister(secondArg));
+                        slt.setRD(allocator.getRegister(result));
                         ilist.add(slt);
                     }
                 }
@@ -99,17 +100,17 @@ public class CodeGenerator {
                     if(firstArg instanceof Constant)
                     {
                         ANDI andi = new ANDI();
-                        andi.setRS(regAllocator.getRegister(firstArg));
-                        andi.setImmediate(regAllocator.getRegister(secondArg));
-                        andi.setRT(regAllocator.getRegister(result));
+                        andi.setRS(allocator.getRegister(firstArg));
+                        andi.setImmediate( secondArg );
+                        andi.setRT(allocator.getRegister(result));
                         ilist.add(andi);
                     }
                     else
                     {
                         AND and = new AND();
-                        and.setRS(regAllocator.getRegister(firstArg));
-                        and.setRT(regAllocator.getRegister(secondArg));
-                        and.setRD(regAllocator.getRegister(result));
+                        and.setRS(allocator.getRegister(firstArg));
+                        and.setRT(allocator.getRegister(secondArg));
+                        and.setRD(allocator.getRegister(result));
                         ilist.add(and);
                     }
                 }
@@ -123,13 +124,18 @@ public class CodeGenerator {
                 if( firstArg instanceof Constant ) {
                     LI li = new LI();
                     li.setImmediate( firstArg );
-                    li.setRS( regAllocator.getRegister( result ));
+                    li.setRS( allocator.getRegister( result ));
+                    ilist.add(li);
+                } else {
+                    MOVE move = new MOVE();
+                    move.setRT( allocator.getRegister( result ) );
+                    move.setRS( allocator.getRegister( firstArg ) );
                     ilist.add(li);
                 }
                 break;
             case Quadruple.GOTOQUADRUPLE:
                 ilist = new ArrayList<Instruction>();
-                Symbol firstArg = q.getFirstArgument(); //Not sure whether address is stored in firstarg or result
+                Symbol result = q.result(); //Not sure whether address is stored in firstarg or result
                 JUMP jp = new JUMP();
                 jp.setImmediate(firstArg);
                 ilist.add(jp);
@@ -138,11 +144,11 @@ public class CodeGenerator {
                 Symbol firstArg = q.getFirstArgument();
                 Symbol branch = q.getResult();
                 BEQ beq = new BEQ();
-                beq.setRS(regAllocator.getRegister(firstArg));
+                beq.setRS(allocator.getRegister(firstArg));
                 beq.setImmediate(branch);
-                //Haven't finished!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             case Quadruple.NEWARRAYQUADRUPLE:
             case Quadruple.NEWOBJECTQUADRUPLE:
+                ilist.add( new SW);
             case Quadruple.PARAMETERQUADRUPLE:
             case Quadruple.RETURNQUADRUPLE:
                 ilist = new ArrayList<Instruction>();
@@ -156,4 +162,5 @@ public class CodeGenerator {
         }
         return ilist;
     }
+*/
 }

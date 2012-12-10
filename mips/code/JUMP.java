@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register.*;
+import mips.allocator.*;
 public class JUMP extends JInstruction {
     public String name() {
         return "j";

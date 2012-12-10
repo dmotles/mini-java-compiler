@@ -31,14 +31,20 @@ public class Allocator {
     }
     private SymbolTable symbolTable;
 //    private HashMap<Symbol,Register> symbolRegMap;
-//    private LabelMap labels;
+      private LabelMap labels;
 //    private ClassFootprintMap classes;
 //    private ActivationFrameMap afm;
 //    private HashMap<VariableSymbol,Integer> [] spillOffsets;
 //    private HashMap<VariableSymbol,Integer> [] fillOffsets;
 
+    private HashMap<Quadruple,Label> quadLabelMap;
+    private HashMap<String, HashMap<String, HashMap<Symbol,Register>>> regMap;
+
     public Allocator( SymbolTable st ) {
         symbolTable = st;
+        labels = new LabelMap();
+        quadLabelMap = new HashMap<Quadruple,Label>();
+        regMap = new HashMap<String, HashMap<String, HashMap<Symbol,Register>>>();
     }
 
 
@@ -49,9 +55,19 @@ public class Allocator {
 
 
     public void allocate( Identifier c, Identifier m, ArrayList<Quadruple> ir ) {
+        HashMap<String,HashMap<Symbol,Register>> classMap = regMap.get( c.toString() );
+        if( classMap == null ) {
+            classMap = new HashMap<String,HashMap<Symbol,Register>>();
+            regMap.put( c.toString(), classMap );
+        }
+        HashMap<Symbol,Register> methodMap = new HashMap<Symbol,Register>();
+        classMap.put( m.toString(), methodMap );
+
         boolean allocationComplete = false;
         System.out.println( "CLASS: " + c.s + " METH: " + m.s );
         MethodSymbol meth = symbolTable.getMethodByName( c, m );
+        setCFGData( ir );
+        mapJumpLabels( c.toString(), m.toString(), ir );
         while( ! allocationComplete ){
             setCFGData( ir );
             dumpIR( ir );
@@ -59,10 +75,37 @@ public class Allocator {
             InterferenceGraph ifg = new InterferenceGraph( meth, ld, ir );
             System.out.println("INTEFERNCE GRAPH:");
             System.out.println(ifg.toString());
-            ifg.color(gpRegList);
-            allocationComplete = true;
+            allocationComplete = ifg.color(gpRegList);
+        }
+        methodMap.addAll( ifg.getRegMap() );
+    }
+
+    public Label getQuadLabel( Quadruple q ) {
+        return quadLabelMap.get(q);
+    }
+
+    private void mapJumpLabels( String c, String m, ArrayList<Quadruple> ir ) {
+        int labelCount = 0;
+        IdentifierType labelType = new IdentifierType("_LABEL_DO_NOT_ALLOCATE_" );
+        for( int i = ir.size()-1; i >= 0; i-- ){
+            Quadruple q = ir.get(i);
+            switch(q.quadType() ) {
+                case Quadruple.GOTOQUADRUPLE:
+                case Quadruple.IFQUADRUPLE:
+                    Constant c = (Constant)q.getResult();
+                    Quadruple target = ir.get( Integer.parseInt(c.toString) );
+                    String label = "_" + c + "_" + m + "_" + labelCount;
+                    quadLabelMap.put( target , new Label(label) );
+                    q.setResult( new MethodSymbol( labelType , new Identifier(label) ) );
+                    break;
+                default:
+                    break;
+            }
+
         }
     }
+
+
 
     private static void dumpIR( ArrayList<Quadruple> ir ) {
         for( int i = 0 ; i < ir.size() ; i++ ) {
@@ -132,7 +175,7 @@ public class Allocator {
         //return labels.get(method);
     //}
     //
-    public Register getRegister( Symbol s )  {
+    public Register getRegister( String c, String m, Symbol s )  {
         return Register.t0;
     }
 }

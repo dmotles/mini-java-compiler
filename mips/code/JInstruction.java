@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register;
+import mips.allocator.*;
 import visitor.symbol;
 public abstract class JInstruction extends Instruction {
     Symbol immediate;

@@ -20,7 +20,7 @@ public class AssignmentQuadruple extends Quadruple
         result = r;
     }
 
-    private int getOperator() {
+    public int getOperator() {
         return operator;
     }
 

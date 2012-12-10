@@ -41,6 +41,10 @@ public abstract class Quadruple
         return result;
     }
 
+    public void setResult( Symbol r ) {
+        result = r;
+    }
+
     public boolean isCopy() {
         return false;
     }

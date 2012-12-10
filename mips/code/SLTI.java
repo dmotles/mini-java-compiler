@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register.*;
+import mips.allocator.*;
 public class SLTI extends IInstruction {
     public String name() {
         return "slti";

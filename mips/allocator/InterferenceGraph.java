@@ -11,14 +11,13 @@ public class InterferenceGraph {
         graphNodes = new HashMap<Symbol,Node>();
         for( int i = 0; i < ir.size(); i++ ) {
             Quadruple q = ir.get( i );
-            if( q.isDef() ) {
-                Symbol def = q.getResult();
-                HashSet<Symbol> outset = ld.out.get(i);
+            HashSet<Symbol> outset = ld.out.get(i);
+            for( Symbol def : ld.def.get(i) ) {
+                Node defnode = getNode( def );
                 for( Symbol liveout : outset ) {
+                    Node outnode = getNode( liveout );
                     if( def != liveout ) {
                         if( !q.isCopy() || q.getFirstArgument() != liveout ) {
-                            Node defnode = getNode( (Symbol)def );
-                            Node outnode = getNode( liveout );
                             defnode.adjacent.add( outnode );
                             outnode.adjacent.add( defnode );
                         }
@@ -74,7 +73,7 @@ public class InterferenceGraph {
         return n;
     }
 
-    public void color( Collection<Register> allowedRegisters ) {
+    public boolean color( Collection<Register> allowedRegisters ) {
         Stack<Node> stack = new Stack<Node>();
         HashSet<Node> graph = new HashSet<Node>( graphNodes.values() );
         int i = 1;
@@ -109,7 +108,10 @@ public class InterferenceGraph {
             Node n = stack.pop();
             n.add();
             graph.add( n );
-            n.color( allowedRegisters );
+            if (! n.color( allowedRegisters ) ) {
+                System.err.println("Error: unable to allocate registers using naive algorithm - too many conflicts");
+                System.exit(5);
+            }
             if( DEBUG_COLOR ) {
                 System.err.println( "\n== ITERATION: " + i++ );
                 System.err.println( "Stack:" );
@@ -119,6 +121,16 @@ public class InterferenceGraph {
             }
         }
 
+        return true;
+
+    }
+
+    public HashMap<Symbol,Register> getRegMap() {
+        HashMap<Symbol,Register> ret = new HashMap<Symbol,Register>();
+        for( Symbol s : graphNodes.keySet() ) {
+            ret.put( s, graphNodes.get(s).register );
+        }
+        return ret;
     }
 
     private class Node {

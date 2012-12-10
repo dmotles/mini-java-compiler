@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register.*;
+import mips.allocator.*;
 public class AND extends RInstruction {
     public String name() {
         return "and";

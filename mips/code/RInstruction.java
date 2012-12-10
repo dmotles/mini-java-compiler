@@ -1,5 +1,5 @@
 package mips.code;
-import mips.register;
+import mips.allocator.*;
 public abstract class RInstruction extends Instruction {
     Register RS;
     Register RD;

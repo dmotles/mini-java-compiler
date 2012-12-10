@@ -27,6 +27,6 @@ public abstract class IInstruction extends Instruction {
         return immediate;
     }
     public String toString() {
-        return name() + " $" + RS.toString() + ", " + immediate.getName();
+        return name() + " $" + RS.toString() + ", $" + RT.toString() + ", " + immediate.getName();
     }
 }
