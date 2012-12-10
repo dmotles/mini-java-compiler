@@ -1,34 +1,48 @@
 # MiniJava Compiler
-A joint project by Dan Motles and Nee Taylor aka Cash Money Enterprises.
-
-## Path Structure
-
-### ./
-- MJPP - a script to make running the pretty printer easier (not involved in project)
-- MiniJavaLexer.flex/java - lexer
-- MiniJavaParser.cup/java - the parser (no error checking, but modified to include passing lines/col# to AST)
-- MiniJavaPrettyPrinter.java - the pretty printer (project 3a)
-- MiniJavaSymbolTableGenerator.java - driver program to test the symbol table generator
-- Makefile and Make.sh - build the project. I gave up on using a pure makefile to build and just have makefile call the sh script.
-
-### semantic/
-This directory holds the classes for semantic analysis
-- ClassSymbol - represents a class definition. Used to check IdentifierTypes
-- MethodSymbol - Represents method definitions. Used to check method calls primarily.
-- VariableSymbol - represents variable declarations (which also come from formal lists)
-- Symbol - superclass to above classes - All symbols have a type and a function, line number etc.
-- SymbolFunction - enum that allows me to define a symbol's function (i.e. it's like a tag for the symbol type variable/class/method)
-- SymbolType - probably stupid idea - but this class is like an easier to use representation of the symbol's type (int/intarray/bool/idtype). Ultimately might be stupid but idk. Started as an enum, turned into a class so it could hold the name of the ID type.
-- SymbolTable - represents the datastructure holding the symboltable. This is what IR will interact with.
-
-### syntaxtree/
-Provided by author. All classes have been modified to accept line numbers ( except list classes like explist etc. )
-
-### visitor/
-- BuildSymbolTableVisitor.java is the symbol table visitor.
-(Coming soon)
-- TypeCheckingVisitor.java will be called by Build symbol Table to do the dirty of doing type checking.
+A joint project by Dan Motles and Nee Taylor 
 
 ## Build/Run
 
 Build with make, run with MiniJavaC
+
+the make.bat file was modified to compile on linux. you may need to modify it to run on windows.
+
+## Holy Crap We Failed.
+
+To give the grader a better idea of what happened, I would like to explain the complete utter failing 
+on my (Dan Motles) part to properly manage the partnership. Initially I thought it would be a good idea
+to solo this project. That was an incorrect assumption.
+
+Since we ran into difficulty meeting the requirements last time because I had not delegated Nee any tasks,
+this time, i decided to split the project with nee working on mapping the IR to code generation and I doing
+most of the heavy work in register allocation land.
+
+Unfortunately, come this weekend, we failed to produce code that would even work on the first milestones.
+
+## So what does work?
+
+Basically, I am turning one of the early prototype-working versions of register allocation because that's
+what I focused a lot of time on, and you can see it working in simple cases which dont require coalescing.
+
+Nee contributed by writing code in mips/code which is the package that was set to contain our mapping from IR
+to machine code.
+
+I worked primarily in mips/allocator, and also heavily modified many many files.
+
+The project will run liveness analysis and attempt to do simple register allocation. It will print the 
+iterations and the final resulting mappings at the end of execution.
+
+## What don't you see?
+
+There's about 2-3k lines of changes in another git branch which contains the not-working version of allocation
+with spills, coalescing, and freezing. It was my dream to see this work, unffortunately I had to stop to try and
+produce something that would run.
+
+## Why didn't you guys just start simple and work iteratively
+
+Man. We should have. I did not properly commuinicate with my partner the needs of what I needed from him,
+and unfortunately his code was not as complete as I had desired to integrate.
+
+## Have you learned your lesson?
+
+We have. If you would like to see other branches, or give me a chance to do more/explain myself, please contact me at dmm141@pitt.edu
